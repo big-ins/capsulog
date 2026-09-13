@@ -16,7 +16,22 @@
 
 	/* 見ていた一覧に帰る。絞り込みと並び順はクエリに入っている */
 	let back = $derived(page.url.searchParams.get('back'));
+
+	/* 読み進めている間は引っ込める。本文のボタンと重ならないようにする */
+	let lastY = 0;
+	let hidden = $state(false);
+
+	function onScroll() {
+		const y = window.scrollY;
+		// 少し動かしただけで消えると、ちらついて読みにくい
+		if (Math.abs(y - lastY) > 6) {
+			hidden = y > lastY && y > 80;
+			lastY = y;
+		}
+	}
 </script>
+
+<svelte:window onscroll={onScroll} />
 
 <svelte:head>
 	<title>{product.name} | カプセログ</title>
@@ -109,7 +124,13 @@
 </main>
 
 <!-- スクロールしても付いてくるので、本文ではなくヘッダーと同じ幅に揃える -->
-<div class="pointer-events-none fixed inset-x-0 bottom-5 z-10 px-4">
+<!-- 引っ込むときは invisible も付ける。見えないものを Enter で押せないようにする -->
+<div
+	class="pointer-events-none fixed inset-x-0 bottom-5 z-10 px-4 transition-all duration-300 motion-reduce:transition-none"
+	class:translate-y-24={hidden}
+	class:opacity-0={hidden}
+	class:invisible={hidden}
+>
 	<div class="mx-auto max-w-2xl lg:max-w-5xl">
 		<!-- eslint-disable svelte/no-navigation-without-resolve -->
 		<!-- resolve() 起点でクエリを足すが、静的解析では追えない -->
