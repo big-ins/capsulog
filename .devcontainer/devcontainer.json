@@ -56,7 +56,8 @@
 
   "mounts": [
     "source=capsulog-wrangler,target=/home/vscode/.config/.wrangler,type=volume",
-    "source=capsulog-claude,target=/home/vscode/.claude,type=volume"
+    "source=capsulog-claude,target=/home/vscode/.claude,type=volume",
+    "source=capsulog-playwright,target=/home/vscode/.cache/ms-playwright,type=volume"
   ],
 
   "remoteUser": "vscode",

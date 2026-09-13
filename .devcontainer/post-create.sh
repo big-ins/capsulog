@@ -18,6 +18,8 @@ corepack enable pnpm
 if [ -f web/package.json ]; then
   pnpm --dir web install
   pnpm --dir web build
+  # E2E と画面の確認に使う。共有ライブラリは Dockerfile で入れている
+  pnpm --dir web exec playwright install chromium
 fi
 
 # Cloudflare の API トークンを読む設定。トークン本体は volume の env に置く
