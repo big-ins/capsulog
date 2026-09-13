@@ -439,18 +439,42 @@
       <li><label class="item"><input type="checkbox" data-id="p1-sort" checked><span class="text">ソート（発売時期・価格）</span><span class="note">任意</span></label></li>
     </ul>
 
+    <div class="group-label">見 た 目 と 操 作 感</div>
+    <ul>
+      <li><label class="item"><input type="checkbox" data-id="p1-ui-motion"><span class="text">画面の切り替えと読み込みに動きを付ける</span><span class="note">初回に驚きを、2回目以降は静かに。毎日使うものなので邪魔をしない</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-ui-touch"><span class="text">押した感触を返す</span><span class="note">チップ・カード・ボタン。反応が遅れると壊れて見える</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-ui-empty"><span class="text">結果が無いときの見せ方</span><span class="note">絞り込みすぎたときに、戻り道を示す</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-ui-first"><span class="text">初めて開いた人に何のサイトか伝える</span><span class="note">説明を読ませない。一覧を見れば分かる形にする</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-ui-perf"><span class="text">表示速度を測って詰める</span><span class="note">一覧1秒以内。実機の回線で測る</span></label></li>
+    </ul>
+
+    <div class="group-label">P W A</div>
+    <ul>
+      <li><label class="item"><input type="checkbox" data-id="p1-pwa-manifest"><span class="text">manifest とアイコンを用意する</span><span class="note">ホーム画面に置いたときの名前と見た目</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-pwa-sw"><span class="text">Service Worker を入れる</span><span class="note">通信が切れても直前の一覧は出す</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-pwa-guide"><span class="text">ホーム画面への追加を案内する</span><span class="note">iOS は手順が知られていない。2回目以降の訪問で出す</span></label></li>
+    </ul>
+
     <div class="group-label">認 証</div>
     <ul>
+      <li><label class="item"><input type="checkbox" data-id="p1-terms"><span class="text">利用規約・プライバシーポリシーの掲載</span><span class="note">登録を受け付ける前に要る。Xハンドルの扱いと当事者間責任を明記</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-report"><span class="text">通報と削除申立ての窓口</span><span class="note">権利者からの申立てにも使う</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p1-users-schema" checked><span class="text">users テーブルの列を確定</span><span class="note">Better Auth の構成。独自の列は additionalFields で足す</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p1-auth-oauth"><span class="text">Google でのログイン</span><span class="note">Google Cloud Console でクライアントを作る</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p1-auth-mail"><span class="text">メール+パスワードでのログイン</span><span class="note">確認メールとリセット。送信は Resend</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p1-auth-merge"><span class="text">同じメールのアカウントを繋ぐ</span><span class="note">Google とパスワードで別々の棚ができないようにする</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p1-cleanup" checked><span class="text">期限切れを消す日次バッチ</span><span class="note">仮登録・トークン・セッション。収集とは別に毎朝4時</span></label></li>
-      <li><label class="item"><input type="checkbox" data-id="p1-terms"><span class="text">利用規約・プライバシーポリシーの掲載</span><span class="note">Xハンドルの扱いと当事者間責任を明記</span></label></li>
-      <li><label class="item"><input type="checkbox" data-id="p1-report"><span class="text">通報と削除申立ての窓口</span><span class="note">権利者からの申立てにも使う</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p1-fav"><span class="text">お気に入り・入手済みの印</span><span class="note">入手済みは撮影への導線</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p1-ics"><span class="text">発売リマインド</span><span class="note">iCal フィード配信。通知は端末のカレンダー</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p1-my-item"><span class="text">自分用の商品追加（非公開）</span><span class="note">バンダイ等。マスタに入れない</span></label></li>
+    </ul>
+
+    <div class="group-label">管 理 サ イ ト</div>
+    <ul>
+      <li><label class="item"><input type="checkbox" data-id="p1-admin-auth"><span class="text">運営だけが入れるようにする</span><span class="note">一般のユーザーには存在を見せない</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-admin-paste"><span class="text">まとめて貼り付けて商品を登録する</span><span class="note">1件ずつ入れない。貼った内容を解釈して一覧で確認してから入れる</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-admin-edit"><span class="text">登録した商品を直す・消す</span><span class="note">触れるのは origin = 'manual' の行だけ</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-admin-bandai"><span class="text">バンダイの商品を載せる</span><span class="note">自動取得はしない。運営が手で入れる</span></label></li>
     </ul>
     <div class="group-label">棚</div>
     <ul>
@@ -464,6 +488,16 @@
       <li><label class="item"><input type="checkbox" data-id="p1-shelf-public"><span class="text">写真の公開</span><span class="note">任意。1枚ずつ選ぶ。既定は非公開。紐付いたものだけ</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p1-shelf-feed"><span class="text">公開写真の流し見</span><span class="note">任意。一覧の先頭で横に流す。未ログインでも見える</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p1-shelf-browse"><span class="text">他人の棚を見る</span><span class="note">任意。飾ってあるものをタップすると商品情報が出る</span></label></li>
+    </ul>
+
+    <div class="group-label">公 開</div>
+    <ul>
+      <li><label class="item"><input type="checkbox" data-id="p1-release-domain"><span class="text">独自ドメインを取る</span><span class="note">workers.dev のままにしない</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-release-ogp"><span class="text">リンクを貼ったときの見た目を整える</span><span class="note">OGP。X に流れたときの第一印象になる</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-release-text"><span class="text">紹介文を決める</span><span class="note">何ができるかを一行で。商標に触れる語を使わない</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-release-media"><span class="text">添える画像と動画を用意する</span><span class="note">画面の動きが伝わるもの。文章より先に見られる</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-release-tags"><span class="text">ハッシュタグを決める</span><span class="note">メーカーの商標は使わない</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-release-calendar"><span class="text">カレンダーだけで公開する</span><span class="note">棚を待たない。使ってもらいながら作る</span></label></li>
     </ul>
 
     <div class="group-label">達 成 基 準</div>
@@ -490,7 +524,6 @@
 
     <div class="group-label">機 能</div>
     <ul>
-      <li><label class="item"><input type="checkbox" data-id="p2-pwa"><span class="text">PWA化</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p2-entry"><span class="text">譲・求の登録</span><span class="note">棚のアイテムから、またはフリーテキスト。マスタには入れない</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p2-suggest"><span class="text">入力時のマスタ候補提示</span><span class="note">選べば厳密マッチが効く</span></label></li>
       <li><label class="item"><input type="checkbox" data-id="p2-area"><span class="text">ホームエリアの登録</span><span class="note">行ける場所。重なる人同士だけマッチ</span></label></li>
