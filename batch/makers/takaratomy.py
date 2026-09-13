@@ -72,7 +72,7 @@ def fetch(existing, full, limit, log):
     """
     found = {}
     for ym_key in _months(full):
-        cal = net.get_text(f"{BASE}/items/gacha/calendar/?ym={ym_key}")
+        cal = net.get_text(f"{BASE}/items/gacha/calendar/?ym={ym_key}", log=log)
         cal_ym = f"{ym_key[:4]}-{ym_key[4:]}"
         n = 0
         for g in GROUP.finditer(cal):

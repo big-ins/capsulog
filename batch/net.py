@@ -9,6 +9,10 @@ from pathlib import Path
 UA = "capsulog-batch/0.1 (contact: ouchi@fintechsys.co.jp)"
 INTERVAL = 1.0
 
+# 接続の揺らぎで1社が丸ごと落ちないようにする。待ち時間は 2 秒、4 秒と広げる
+RETRIES = 3
+BACKOFF = 2.0
+
 # ターリンのサーバは中間証明書を配信していないため、こちらで補う
 _CTX = ssl.create_default_context()
 _CTX.load_verify_locations(Path(__file__).parent / "globalsign-intermediate.pem")
@@ -16,10 +20,9 @@ _CTX.load_verify_locations(Path(__file__).parent / "globalsign-intermediate.pem"
 _last = 0.0
 
 
-def get(url: str, timeout: int = 30) -> bytes:
-    """URL を取得してボディを返す。
+def _fetch(url: str, timeout: int) -> bytes:
+    """1回だけ取得する。前回のリクエストから1秒たっていなければ、たつまで待つ。
 
-    前回のリクエストから1秒たっていなければ、たつまで待つ。
     メーカーのサーバに負荷をかけないための待機で、外してはいけない。
     """
     global _last
@@ -41,6 +44,26 @@ def get(url: str, timeout: int = 30) -> bytes:
     return body
 
 
-def get_text(url: str, timeout: int = 30) -> str:
+def get(url: str, timeout: int = 30, log=None) -> bytes:
+    """URL を取得してボディを返す。繋がらなければ間隔をあけて3回まで試す。
+
+    再試行するのは接続とタイムアウトの失敗だけ。
+    HTTPError はサーバが返した答えなので、そのまま投げる。
+    """
+    for attempt in range(1, RETRIES):
+        try:
+            return _fetch(url, timeout)
+        except urllib.error.HTTPError:
+            raise
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            wait = BACKOFF * attempt
+            if log:
+                log.warning(f"取得に失敗 {attempt}/{RETRIES} {wait:.0f}s 待つ url={url} {e}")
+            time.sleep(wait)
+    # 最後の1回。ここで失敗したら呼び出し側に投げる
+    return _fetch(url, timeout)
+
+
+def get_text(url: str, timeout: int = 30, log=None) -> str:
     """URL を取得して UTF-8 文字列として返す。壊れたバイトは置換する。"""
-    return get(url, timeout).decode("utf-8", "replace")
+    return get(url, timeout, log).decode("utf-8", "replace")

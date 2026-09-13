@@ -25,9 +25,9 @@ PERIOD = {"上旬": "early", "中旬": "mid", "下旬": "late"}
 SITEMAP_LOC = re.compile(r"kitan\.jp/products/([^/<\]\s]+)/")
 
 
-def _list_all(limit):
+def _list_all(limit, log):
     """サイトマップから全商品のスラッグを集める。スラッグが source_id になる。"""
-    xml = net.get_text(f"{BASE}/products-sitemap.xml")
+    xml = net.get_text(f"{BASE}/products-sitemap.xml", log=log)
     slugs = list(dict.fromkeys(SITEMAP_LOC.findall(xml)))
     return slugs[:limit] if limit else slugs
 
@@ -80,7 +80,7 @@ def fetch(existing, full, limit, log):
     Returns:
         (正規化した商品のリスト, 一覧に載っていた件数)
     """
-    slugs = _list_all(limit)
+    slugs = _list_all(limit, log)
     log.info(f"一覧 listed={len(slugs)}")
     out = []
     for sid in slugs:

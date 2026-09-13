@@ -11,12 +11,12 @@ COUNT_GATE = True  # 一覧に全件が載るため、件数の減少で壊れ�
 BASE = "https://tarlin-capsule.jp"
 
 
-def _list_ids(limit):
+def _list_ids(limit, log):
     """商品 ID の一覧を集める。件数は count API、一覧は100件ずつページングする。"""
-    total = int(net.get_text(f"{BASE}/api/products/count"))
+    total = int(net.get_text(f"{BASE}/api/products/count", log=log))
     ids, start = [], 0
     while start < total:
-        chunk = json.loads(net.get_text(f"{BASE}/api/products?_limit=100&_start={start}"))
+        chunk = json.loads(net.get_text(f"{BASE}/api/products?_limit=100&_start={start}", log=log))
         if not chunk:
             break
         ids.extend(x["id"] for x in chunk)
@@ -32,7 +32,7 @@ def fetch(existing, full, limit, log):
     Returns:
         (正規化した商品のリスト, 一覧に載っていた件数)
     """
-    ids, total = _list_ids(limit)
+    ids, total = _list_ids(limit, log)
     log.info(f"一覧 listed={len(ids)} count={total}")
     out = []
     for i in ids:

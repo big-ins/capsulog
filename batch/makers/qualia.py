@@ -12,7 +12,7 @@ BASE = "https://www.qualia-45.jp"
 VIEW = re.compile(r"/product/view/(\d+)")
 
 
-def _list_ids(full, limit):
+def _list_ids(full, limit, log):
     """商品 ID の一覧を集める。
 
     先頭ページは product.html。全件モードのみ index/{page} を新規が尽きるまでたどる。
@@ -23,7 +23,7 @@ def _list_ids(full, limit):
     # 60 はページングが壊れて止まらなくなったときの保険
     while page <= 60:
         url = f"{BASE}/product.html" if page == 1 else f"{BASE}/product/index/{page}?target=product"
-        h = net.get_text(url)
+        h = net.get_text(url, log=log)
         chunk = [int(m.group(1)) for m in VIEW.finditer(h)]
         # 既知の ID しか出なくなったら最終ページまで見た
         new = [i for i in chunk if i not in seen]
@@ -62,7 +62,7 @@ def fetch(existing, full, limit, log):
     Returns:
         (正規化した商品のリスト, 一覧に載っていた件数)
     """
-    ids = _list_ids(full, limit)
+    ids = _list_ids(full, limit, log)
     log.info(f"一覧 listed={len(ids)}")
     out = []
     for i in ids:

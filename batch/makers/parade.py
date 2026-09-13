@@ -31,7 +31,7 @@ PERIOD_PATTERN = re.compile("|".join(PERIOD))
 NOTE_PRICE = re.compile(r"価格[:：]\s*([\d,]+)\s*円")
 
 
-def _list_items(limit):
+def _list_items(limit, log):
     """カプセルトイのカテゴリをページングでたどり、スラッグと発売時期を集める。
 
     最終ページの次は 404 を返す。これがページングの終わりの合図になる。
@@ -43,7 +43,7 @@ def _list_items(limit):
     while page <= 60:
         url = CATEGORY if page == 1 else f"{CATEGORY}/page/{page}"
         try:
-            h = net.get_text(url)
+            h = net.get_text(url, log=log)
         except urllib.error.HTTPError as e:
             if e.code == 404 and page > 1:
                 break
@@ -129,7 +129,7 @@ def fetch(existing, full, limit, log):
     Returns:
         (正規化した商品のリスト, 一覧に載っていた件数)
     """
-    items = _list_items(limit)
+    items = _list_items(limit, log)
     years = _fill_years(items)
     log.info(f"一覧 listed={len(items)}")
     out = []
