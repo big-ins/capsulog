@@ -57,6 +57,8 @@
 	--duration-press: 0.15s;
 	--duration-open: 0.3s;
 	--duration-large: 0.44s;
+	/* 一覧が現れるときだけ。距離を長く取るので、他より緩やかに動かす */
+	--duration-reveal: 0.6s;
 }
 
 body {
@@ -233,15 +235,31 @@ body {
 	}
 }
 
-/* 現れたものが下から弾んで出る。
-   要素が生まれた瞬間に一度だけ走るので、続きを読んで増えた分にだけ効く */
+/* 現れたものが左から流れて出る。
+   要素が追加されたときに一度だけ走るので、続きを読んで増えた分にだけ効く。
+   上の行から順に遅らせて、波のように流れていくようにする */
 .reveal {
-	animation: reveal-rise var(--duration-large) var(--ease-bounce) backwards;
+	/* 何行目に置かれるか。横に並んだものは同じ行として揃って出る */
+	--columns: 1;
+	--row: round(down, var(--index, 0) / var(--columns), 1);
+	animation: reveal-slide var(--duration-reveal) var(--ease-bounce) backwards;
+	/* 行が下がるほど遅らせる。上限を置いて、下まで待たされないようにする */
+	animation-delay: min(var(--row) * 180ms, 1600ms);
 }
-@keyframes reveal-rise {
+@media (width >= 40rem) {
+	.reveal {
+		--columns: 2;
+	}
+}
+@media (width >= 64rem) {
+	.reveal {
+		--columns: 3;
+	}
+}
+@keyframes reveal-slide {
 	from {
 		opacity: 0;
-		transform: translateY(22px) scale(0.97);
+		transform: translateX(-90px);
 	}
 }
 @media (prefers-reduced-motion: reduce) {
