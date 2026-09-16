@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
+import { resetPasswordMail, sendMail, verificationMail } from './mail.server';
 
 /*
  * リクエストごとに作る。D1 のバインディングはリクエストの中でしか取れない。
@@ -17,11 +18,17 @@ export function createAuth(env: App.Platform['env']) {
 			// 確認が済むまでログインさせない。他人のアドレスで登録したものを動かさないため
 			requireEmailVerification: true,
 			revokeSessionsOnPasswordReset: true,
-			resetPasswordTokenExpiresIn: 60 * 60
+			resetPasswordTokenExpiresIn: 60 * 60,
+			sendResetPassword: async ({ user, url }) => {
+				await sendMail(env, { to: user.email, ...resetPasswordMail(url) });
+			}
 		},
 		emailVerification: {
 			sendOnSignUp: true,
-			expiresIn: 60 * 60 * 24
+			expiresIn: 60 * 60 * 24,
+			sendVerificationEmail: async ({ user, url }) => {
+				await sendMail(env, { to: user.email, ...verificationMail(url) });
+			}
 		},
 
 		socialProviders: {

@@ -9,3 +9,9 @@ BETTER_AUTH_URL=http://localhost:5173
 # 承認済みのリダイレクト URI に http://localhost:5173/api/auth/callback/google を入れる
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+
+# 確認メールとパスワード再設定の送信に使う
+# 独自ドメインを認証するまでは onboarding@resend.dev を差出人にする
+# その間の宛先は Resend に登録した自分のアドレスに限られる
+RESEND_API_KEY=
+MAIL_FROM=onboarding@resend.dev
