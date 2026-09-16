@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
 import { resetPasswordMail, sendMail, verificationMail } from './mail.server';
+import { userFields } from './fields';
 
 /*
  * リクエストごとに作る。D1 のバインディングはリクエストの中でしか取れない。
@@ -51,13 +52,7 @@ export function createAuth(env: App.Platform['env']) {
 
 		user: {
 			modelName: 'users',
-			additionalFields: {
-				xHandle: { type: 'string', required: false, input: false },
-				icalToken: { type: 'string', required: false, input: false },
-				agreedTermsVersion: { type: 'string', required: false },
-				// 退会の印。Better Auth は見ないので、弾くのは自分でやる
-				deletedAt: { type: 'date', required: false, input: false }
-			}
+			additionalFields: userFields
 		},
 		session: {
 			modelName: 'sessions',
