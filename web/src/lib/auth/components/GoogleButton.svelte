@@ -32,7 +32,7 @@
 	type="button"
 	disabled={busy}
 	onclick={signInWithGoogle}
-	class="pressable flex items-center justify-center gap-2.5 rounded-full bg-surface py-3 text-body font-bold shadow-clay disabled:opacity-60"
+	class="pressable flex items-center justify-center gap-2.5 rounded-full bg-surface py-3 text-body font-bold shadow-clay-sm disabled:opacity-60 sm:py-3.5"
 >
 	<GoogleMark />
 	{label}

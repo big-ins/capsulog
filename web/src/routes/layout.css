@@ -50,6 +50,8 @@
 	--shadow-clay-pressed:
 		5px 6px 12px var(--sh), inset 2px 3px 4px rgba(255, 255, 255, 0.45),
 		inset -2px -4px 6px rgba(163, 55, 47, 0.4);
+	/* 入力欄。外影を持たず内側だけ沈める。押せるものと見た目を分ける */
+	--shadow-clay-inset: inset 3px 4px 8px var(--sh-in), inset -2px -2px 6px var(--hi);
 
 	/* 動きの決まり。行き過ぎて戻る曲線で、樹脂の弾力に合わせる。
 	   第2引数が行き過ぎの量。1.8 で 18% ほど超えてから戻る */

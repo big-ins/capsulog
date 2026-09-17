@@ -34,6 +34,7 @@
 				submitError = errorMessage(error.code);
 				return;
 			}
+			// 行き先は safeRedirect() で自分のサイトに限ってある。
 			// 遷移しきるまで押せないままにする
 			await goto(data.redirectTo, { invalidateAll: true });
 		} catch {
@@ -50,52 +51,75 @@
 
 <div data-hero class="absolute inset-x-0 top-0 -z-10 h-17 bg-accent" aria-hidden="true"></div>
 
-<main class="mx-auto flex max-w-sm flex-col gap-6 px-4 pt-24 pb-16">
-	<h1 class="text-title font-extrabold">ログイン</h1>
+<!-- 画面が広くても伸ばしきらない。入力欄が長いほど視線が横に流れ、読みにくくなる -->
+<main class="mx-auto flex max-w-sm flex-col gap-5 px-4 pt-24 pb-16 sm:max-w-md sm:pt-28">
+	<h1 class="px-1 text-title font-extrabold sm:text-site">ログイン</h1>
 
-	<GoogleButton
-		label="Google でログイン"
-		redirectTo={data.redirectTo}
-		bind:busy
-		onfail={(message) => (submitError = message)}
-	/>
+	<!-- 入力とボタンを1枚の面に載せる。面が浮き、その上で入力欄が窪む -->
+	<div class="relative overflow-hidden rounded-3xl bg-surface p-5 shadow-clay sm:p-7">
+		<span class="deco-circle absolute -top-4 -right-4 h-14 w-14 opacity-10" aria-hidden="true"
+		></span>
+		<span class="deco-square absolute -bottom-5 -left-5 h-16 w-16 opacity-10" aria-hidden="true"
+		></span>
 
-	<div class="flex items-center gap-3 text-note font-bold text-faint">
-		<span class="h-px flex-1 bg-faint/25"></span>
-		または
-		<span class="h-px flex-1 bg-faint/25"></span>
+		<div class="relative flex flex-col gap-5">
+			<GoogleButton
+				label="Google でログイン"
+				redirectTo={data.redirectTo}
+				bind:busy
+				onfail={(message) => (submitError = message)}
+			/>
+
+			<div class="flex items-center gap-3 text-note font-bold text-faint">
+				<span class="h-px flex-1 bg-faint/25"></span>
+				または
+				<span class="h-px flex-1 bg-faint/25"></span>
+			</div>
+
+			<form class="flex flex-col gap-4" onsubmit={submit} novalidate>
+				<AuthField
+					id="email"
+					label="メールアドレス"
+					type="email"
+					autocomplete="email"
+					bind:value={form.email}
+					error={errors.email}
+				/>
+				<AuthField
+					id="password"
+					label="パスワード"
+					type="password"
+					autocomplete="current-password"
+					bind:value={form.password}
+					error={errors.password}
+				/>
+
+				<SubmitError message={submitError} />
+
+				<button
+					type="submit"
+					disabled={busy}
+					class="pressable rounded-full bg-accent py-3 text-body font-bold text-on-accent shadow-clay-pressed disabled:opacity-60 sm:py-3.5"
+				>
+					{busy ? '確認しています' : 'ログイン'}
+				</button>
+			</form>
+		</div>
 	</div>
 
-	<form class="flex flex-col gap-4" onsubmit={submit} novalidate>
-		<AuthField
-			id="email"
-			label="メールアドレス"
-			type="email"
-			autocomplete="email"
-			bind:value={form.email}
-			error={errors.email}
-		/>
-		<AuthField
-			id="password"
-			label="パスワード"
-			type="password"
-			autocomplete="current-password"
-			bind:value={form.password}
-			error={errors.password}
-		/>
-
-		<SubmitError message={submitError} />
-
-		<button
-			type="submit"
-			disabled={busy}
-			class="pressable rounded-full bg-accent py-3 text-body font-bold text-on-accent shadow-clay-pressed disabled:opacity-60"
-		>
-			{busy ? '確認しています' : 'ログイン'}
-		</button>
-	</form>
-
-	<div class="flex flex-col items-center gap-2.5 text-note font-bold">
-		<a href={resolve('/signup')} class="text-accent underline">はじめての方はこちら</a>
-	</div>
+	<a href={resolve('/signup')} class="text-center text-note font-bold text-accent underline">
+		はじめての方はこちら
+	</a>
 </main>
+
+<style>
+	/* 隅の装飾。円と四角を対角に置く。散らさず、面の角だけに留める */
+	.deco-circle {
+		background: var(--accent);
+		border-radius: 50%;
+	}
+	.deco-square {
+		background: var(--sub);
+		transform: rotate(24deg);
+	}
+</style>

@@ -23,7 +23,7 @@
 		aria-invalid={error ? 'true' : undefined}
 		aria-errormessage={error ? `${id}-error` : undefined}
 		class={[
-			'w-full rounded-2xl bg-surface px-4 py-3 text-input shadow-clay outline-none placeholder:text-faint',
+			'w-full rounded-2xl bg-ground px-4 py-3 text-input shadow-clay-inset outline-none placeholder:text-faint sm:py-3.5',
 			error ? 'ring-2 ring-accent' : 'focus:ring-2 focus:ring-sub'
 		]}
 	/>
