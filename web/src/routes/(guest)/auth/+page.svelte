@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { slide } from 'svelte/transition';
+	import { fold } from '$lib/common/transition';
 	import { authClient } from '$lib/auth/client';
 	import { errorMessage, OFFLINE_MESSAGE, type AuthMode } from '$lib/auth/form';
 	import { signInSchema, signUpSchema } from '$lib/auth/schemas';
@@ -12,8 +13,26 @@
 
 	let { data } = $props();
 
-	let mode = $derived(data.mode);
-	let isSignUp = $derived(mode === 'signup');
+	const OPEN = { duration: 300, opening: true };
+	const CLOSE = { duration: 200, opening: false };
+
+	/*
+	 * 画面に出しているモード。URL とは別に持つ。
+	 * URL はボタンを押した瞬間に変わるが、閉じる動きはそのあと 200ms 続く。
+	 * 文言を URL に直結させると、欄が閉じきる前に切り替わり、
+	 * もう要らないものが居座って見える
+	 */
+	let shown = $state<AuthMode>(untrack(() => data.mode));
+	let isSignUp = $derived(shown === 'signup');
+
+	/* 切り替えの最中。閉じ終わるまで URL の変化を画面に入れない */
+	let switching = $state(false);
+
+	/* 外から来たときと、戻るで移ったときは、動かさずに合わせる */
+	$effect(() => {
+		const incoming = data.mode;
+		if (!untrack(() => switching)) shown = incoming;
+	});
 
 	let form = $state({ name: '', email: '', password: '' });
 	let errors = $state<FieldErrors<typeof form>>({});
@@ -42,20 +61,37 @@
 		}
 	} as const satisfies Record<AuthMode, Record<string, string>>;
 
-	let copy = $derived(COPY[mode]);
+	let copy = $derived(COPY[shown]);
 
-	/* 切り替えのたびに前のモードのエラーを消す。入れたままの値は残す */
-	function switchMode(next: string) {
+	/*
+	 * 切り替えのたびに前のモードのエラーを消す。入れたままの値は残す。
+	 * 画面の文言は shown が切り替わったときに一斉に変わる。
+	 * 閉じる側は動きが終わってから、開く側はすぐに切り替える
+	 */
+	async function switchMode(next: AuthMode) {
+		if (switching) return;
 		errors = {};
 		submitError = '';
+		switching = true;
+
+		// 先に画面を動かす。文言も欄もここで一斉に変わる
+		shown = next;
+		// 動きが終わってから URL を合わせる。走っている最中に load が挟まると動きが飛ぶ
+		await wait(next === 'signup' ? OPEN.duration : CLOSE.duration);
+
 		// 履歴を汚さない。戻るで前のモードへ寄り道させない。
 		// resolve() 起点でクエリを足すが、静的解析では追えない
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(`${resolve('/auth')}?mode=${next}`, {
+		await goto(`${resolve('/auth')}?mode=${next}`, {
 			replaceState: true,
 			noScroll: true,
 			keepFocus: true
 		});
+		switching = false;
+	}
+
+	function wait(duration: number): Promise<void> {
+		return new Promise((resolve) => setTimeout(resolve, duration));
 	}
 
 	async function submit(event: SubmitEvent) {
@@ -120,10 +156,13 @@
 			</div>
 		</div>
 	{:else}
-		<div class="flex flex-col gap-2 px-1">
+		<div class="flex flex-col px-1">
 			<h1 class="text-title font-extrabold sm:text-site">{copy.title}</h1>
 			{#if copy.lead}
-				<p class="text-note leading-relaxed text-faint">{copy.lead}</p>
+				<!-- 登録のときだけ増える。急に現れるとカードごと下へずれて見える -->
+				<div in:fold={OPEN} out:fold={CLOSE}>
+					<p class="pt-2 text-note leading-relaxed text-faint">{copy.lead}</p>
+				</div>
 			{/if}
 		</div>
 
@@ -150,8 +189,10 @@
 
 				<form class="flex flex-col gap-4" onsubmit={submit} novalidate>
 					{#if isSignUp}
-						<!-- 登録のときだけ増える。開いた分だけ下の欄が押し下がる -->
-						<div transition:slide={{ duration: 260 }}>
+						<!-- 登録のときだけ増える。開いた分だけ下の欄が押し下がる。
+						     高さだけ動かすと、縮みきる瞬間まで文字が残って途切れて見える。
+						     中身を薄くしながら閉じる -->
+						<div in:fold={OPEN} out:fold={CLOSE}>
 							<AuthField
 								id="name"
 								label="ニックネーム"
