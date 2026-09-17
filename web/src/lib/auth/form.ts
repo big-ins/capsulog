@@ -48,3 +48,11 @@ export function safeRedirect(value: string | null): string {
 	if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
 	return value;
 }
+
+/** ログインと新規登録のどちらを見せているか */
+export type AuthMode = 'login' | 'signup';
+
+/** 知らない値は、持っている人の多いログインに寄せる */
+export function authMode(value: string | null): AuthMode {
+	return value === 'signup' ? 'signup' : 'login';
+}

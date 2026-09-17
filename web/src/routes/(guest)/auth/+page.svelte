@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { slide } from 'svelte/transition';
 	import { authClient } from '$lib/auth/client';
-	import { errorMessage, OFFLINE_MESSAGE } from '$lib/auth/form';
-	import { signUpSchema, type SignUpInput } from '$lib/auth/schemas';
+	import { errorMessage, OFFLINE_MESSAGE, type AuthMode } from '$lib/auth/form';
+	import { signInSchema, signUpSchema } from '$lib/auth/schemas';
 	import { parseForm, type FieldErrors } from '$lib/common/form';
 	import AuthField from '$lib/auth/components/AuthField.svelte';
 	import GoogleButton from '$lib/auth/components/GoogleButton.svelte';
@@ -10,33 +12,82 @@
 
 	let { data } = $props();
 
+	let mode = $derived(data.mode);
+	let isSignUp = $derived(mode === 'signup');
+
 	let form = $state({ name: '', email: '', password: '' });
-	let errors = $state<FieldErrors<SignUpInput>>({});
+	let errors = $state<FieldErrors<typeof form>>({});
 	let submitError = $state('');
 	let busy = $state(false);
 	let sentTo = $state('');
 
+	const COPY = {
+		login: {
+			title: 'ログイン',
+			lead: '',
+			social: 'Google でログイン',
+			submit: 'ログイン',
+			working: '確認しています',
+			alt: 'はじめての方はこちら',
+			altMode: 'signup'
+		},
+		signup: {
+			title: 'カプセログをはじめる',
+			lead: '登録すると、お気に入りと発売のリマインド、集めたものを飾る棚が使えます。',
+			social: 'Google ではじめる',
+			submit: '登録する',
+			working: '登録しています',
+			alt: 'アカウントをお持ちの方はこちら',
+			altMode: 'login'
+		}
+	} as const satisfies Record<AuthMode, Record<string, string>>;
+
+	let copy = $derived(COPY[mode]);
+
+	/* 切り替えのたびに前のモードのエラーを消す。入れたままの値は残す */
+	function switchMode(next: string) {
+		errors = {};
+		submitError = '';
+		// 履歴を汚さない。戻るで前のモードへ寄り道させない。
+		// resolve() 起点でクエリを足すが、静的解析では追えない
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`${resolve('/auth')}?mode=${next}`, {
+			replaceState: true,
+			noScroll: true,
+			keepFocus: true
+		});
+	}
+
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
+		// disabled はボタン経由にしか効かない。入力欄での Enter が素通りする
 		if (busy) return;
 
 		submitError = '';
-		const result = parseForm(signUpSchema, form);
+		const result = isSignUp
+			? parseForm(signUpSchema, form)
+			: parseForm(signInSchema, { email: form.email, password: form.password });
 		errors = result.errors;
 		if (!result.ok) return;
 
 		busy = true;
 		try {
-			const { error } = await authClient.signUp.email({
-				...result.value,
-				callbackURL: data.redirectTo
-			});
+			// 認証の失敗は error に入る。例外で飛ぶのは通信が切れたとき
+			const { error } = isSignUp
+				? await authClient.signUp.email({ ...form, callbackURL: data.redirectTo })
+				: await authClient.signIn.email({ email: form.email, password: form.password });
+
 			if (error) {
 				submitError = errorMessage(error.code);
 				return;
 			}
-			// 登録済みのアドレスでも同じ画面を出す。ここで分けると登録の有無が分かる
-			sentTo = result.value.email;
+			if (isSignUp) {
+				// 登録済みのアドレスでも同じ画面を出す。ここで分けると登録の有無が分かる
+				sentTo = form.email;
+				return;
+			}
+			// 行き先は safeRedirect() で自分のサイトに限ってある
+			await goto(data.redirectTo, { invalidateAll: true });
 		} catch {
 			submitError = OFFLINE_MESSAGE;
 		} finally {
@@ -46,7 +97,7 @@
 </script>
 
 <svelte:head>
-	<title>はじめる | カプセログ</title>
+	<title>{copy.title} | カプセログ</title>
 </svelte:head>
 
 <div data-hero class="absolute inset-x-0 top-0 -z-10 h-17 bg-accent" aria-hidden="true"></div>
@@ -68,15 +119,12 @@
 				</p>
 			</div>
 		</div>
-		<a href={resolve('/login')} class="text-center text-note font-bold text-accent underline">
-			ログインへ
-		</a>
 	{:else}
 		<div class="flex flex-col gap-2 px-1">
-			<h1 class="text-title font-extrabold sm:text-site">カプセログをはじめる</h1>
-			<p class="text-note leading-relaxed text-faint">
-				登録すると、お気に入りと発売のリマインド、集めたものを飾る棚が使えます。
-			</p>
+			<h1 class="text-title font-extrabold sm:text-site">{copy.title}</h1>
+			{#if copy.lead}
+				<p class="text-note leading-relaxed text-faint">{copy.lead}</p>
+			{/if}
 		</div>
 
 		<!-- 入力とボタンを1枚の面に載せる。面が浮き、その上で入力欄が窪む -->
@@ -88,7 +136,7 @@
 
 			<div class="relative flex flex-col gap-5">
 				<GoogleButton
-					label="Google ではじめる"
+					label={copy.social}
 					redirectTo={data.redirectTo}
 					bind:busy
 					onfail={(message) => (submitError = message)}
@@ -101,14 +149,19 @@
 				</div>
 
 				<form class="flex flex-col gap-4" onsubmit={submit} novalidate>
-					<AuthField
-						id="name"
-						label="ニックネーム"
-						type="text"
-						autocomplete="username"
-						bind:value={form.name}
-						error={errors.name}
-					/>
+					{#if isSignUp}
+						<!-- 登録のときだけ増える。開いた分だけ下の欄が押し下がる -->
+						<div transition:slide={{ duration: 260 }}>
+							<AuthField
+								id="name"
+								label="ニックネーム"
+								type="text"
+								autocomplete="username"
+								bind:value={form.name}
+								error={errors.name}
+							/>
+						</div>
+					{/if}
 					<AuthField
 						id="email"
 						label="メールアドレス"
@@ -121,8 +174,8 @@
 						id="password"
 						label="パスワード"
 						type="password"
-						autocomplete="new-password"
-						placeholder="8文字以上"
+						autocomplete={isSignUp ? 'new-password' : 'current-password'}
+						placeholder={isSignUp ? '8文字以上' : undefined}
 						bind:value={form.password}
 						error={errors.password}
 					/>
@@ -134,15 +187,19 @@
 						disabled={busy}
 						class="pressable rounded-full bg-accent py-3 text-body font-bold text-on-accent shadow-clay-pressed disabled:opacity-60 sm:py-3.5"
 					>
-						{busy ? '登録しています' : '登録する'}
+						{busy ? copy.working : copy.submit}
 					</button>
 				</form>
 			</div>
 		</div>
 
-		<a href={resolve('/login')} class="text-center text-note font-bold text-accent underline">
-			アカウントをお持ちの方はこちら
-		</a>
+		<button
+			type="button"
+			onclick={() => switchMode(copy.altMode)}
+			class="text-center text-note font-bold text-accent underline"
+		>
+			{copy.alt}
+		</button>
 	{/if}
 </main>
 

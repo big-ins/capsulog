@@ -21,6 +21,7 @@ pnpm release  # ビルドして Workers へ配る
 |---|---|---|
 | カレンダー | `/` | 新作を発売月でグルーピング。メーカー・キーワード・価格で絞り込み、発売時期・価格でソートする。既定表示は今月と来月 |
 | 商品詳細 | `/products/{id}` | 全何種、価格、ラインナップ、公式サイトへのリンク |
+| 認証 | `/auth` | ログインと新規登録。`?mode=signup` で登録側になる |
 | 棚一覧 | `/shelf` | 自分の什器の一覧。作成もここから |
 | 棚 | `/shelf/{id}` | 什器に写真を並べる。形の編集、撮影から切り抜き・リタッチまでのフローもこの画面の中 |
 | 交換（フェーズ2） | `/trade` | 譲・求の登録とマッチ結果 |
@@ -119,7 +120,7 @@ Better Auth に任せる。Google のログインとメール+パスワードの
 
 ```ts
 export const load: PageServerLoad = async ({ locals }) => {
-  if (!locals.user) redirect(302, '/login');
+  if (!locals.user) redirect(302, '/auth');
   return { userId: locals.user.id };
 };
 ```
