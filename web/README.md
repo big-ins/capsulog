@@ -182,25 +182,17 @@ Svelte 5 の runes で書く。`$state` `$derived` `$props` を使う。
 
 ```text
 src/
-  routes/                     URL と機能の結び付けだけ。薄く保つ
-    +page.server.ts           lib の queries を呼ぶ
-    +page.svelte              lib の components を並べる
+  routes/               URL と機能の結び付けだけ。薄く保つ
   lib/
-    calendar/                 機能ディレクトリ。shelf、trade も同じ形
-      components/             この機能のコンポーネント
-      types.ts                この機能の型
-      schemas.ts              この機能のフォームの形
-      queries.server.ts       D1 への SQL。サーバ専用
-    auth/                     認証。画面から使うものとサーバ専用が混ざる
-      schemas.ts              ログイン・新規登録・再設定の形
-      fields.ts               users の独自の列。サーバとクライアントで共用
-      client.ts               画面から認証を呼ぶ入口
-      auth.server.ts          Better Auth の設定
-      mail.server.ts          Resend でのメール送信
-    common/                   機能をまたぐもの
-      components/             ヘッダーなど。ロジックは components の外に置く
-      form.ts                 スキーマで検証して、項目ごとのエラーにする
+    <機能名>/           calendar、auth、shelf、trade
+      components/       この機能のコンポーネント
+      types.ts          この機能の型
+      schemas.ts        この機能のフォームの形
+      queries.server.ts D1 への SQL。サーバ専用
+    common/             機能をまたぐもの
 ```
+
+中のファイルは要るものだけ置く。型を持たない機能に `types.ts` を作らない。
 
 `.server.ts` で終わるモジュールはサーバ専用になる。
 クライアント側に import されるとビルドが落ちるため、SQL や秘匿値はこの名前に置く。
@@ -215,9 +207,38 @@ src/
 1つの項目に複数のエラーが出ても、画面に出すのは最初の1つだけにする。
 
 ```ts
-const result = parseForm(signInSchema, { email, password });
-if (!result.ok) errors = result.errors;
+const result = parseForm(signInSchema, form);
+errors = result.errors;
+if (!result.ok) return;
 ```
+
+**入力の値は1つのオブジェクトにまとめる。** 項目ごとに `$state` を置くと、
+増えるたびに宣言が伸び、どこまでが1つのフォームか読めなくなる。
+
+```ts
+let form = $state({ email: '', password: '' });
+```
+
+**スキーマのエラーと、送って分かったエラーは分ける。**
+前者は項目に紐づき、送る前に出る。後者は項目に紐づかず、サーバの応答で初めて出る。
+混ぜると、消す時機も置き場も違うものが同じ入れ物に入る。
+
+```ts
+let errors = $state<FieldErrors<SignInInput>>({});  // 項目ごと。欄の下に出る
+let submitError = $state('');                        // 全体で1つ。ボタンの上に出る
+```
+
+**二重送信は関数の冒頭で弾く。** `disabled` はボタン経由にしか効かず、
+入力欄での Enter が素通りする。
+
+**サーバの応答は、失敗が戻り値と例外の2通りで来る。**
+認証の失敗は戻り値の `error` に入り、通信が切れたときだけ例外で飛ぶ。
+どちらかだけを見ると、片方で画面が固まる。
+
+**フォームの外にある値の検証は、スキーマに載せず ts に切り出す。**
+URL のクエリ、localStorage の中身、外部から受け取った値など。
+入力欄と対応しないものをスキーマに混ぜると、項目ごとのエラーという形が合わなくなる。
+`auth/form.ts` の `safeRedirect()` がこれにあたる。
 
 **画面のエラーは、そのアドレスが登録されているかを教えない。**
 「登録済み」「未確認」「パスワードが違う」を区別して出すと、アドレスの一覧を作られる。
@@ -305,46 +326,85 @@ Tailwind のユーティリティで書く。独自の CSS はグローバルな
 
 **棚は例外。** 写真が主役のため、装飾を置かず影も弱める。背景は無口に保つ。
 
-### 型とコメント
+### 型
 
 `lang="ts"` を必ず付ける。`any` を使わない。
-`src/lib/` の公開関数には TSDoc（`/** */`）で要約を書く。
-コンポーネント内の処理には書かない。コメントの粒度は CLAUDE.md に従う。
+
+### コメント
+
+名前と型で分かることは書かない。読んでも分からないことだけ書く。
+
+書くもの。
+
+- なぜそうしたか。特に一見不自然に見える実装
+- 踏むと壊れる制約。処理の順序に意味がある、片方だけ直すと壊れる、など
+- 公開するものの使い方。呼び出す側が中身を読まずに済む粒度で
+
+書かないもの。
+
+- 関数名や型シグネチャの言い換え
+- 一時的な状況の説明で、時間が経つと嘘になるもの
+
+```ts
+// 書く。読んでも意図が分からない
+// 「//」で始まるものは別のサイトを指す
+if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
+
+// 書かない。名前と型で足りる
+/** 年月を日本語表記にする */
+function formatYearMonth(yearMonth: string | null): string
+```
+
+全関数に機械的に付けない。自明なコメントが増えると、重要なものが読み飛ばされる。
 
 ### テスト
 
-機能ごとの `__tests__/` に置く。ファイル名は対象 + `.test.ts`。
+vitest で書く。`pnpm test` で一度だけ実行し、`pnpm test:watch` で監視する。
+
+`pnpm test:coverage` でカバレッジを出す。`coverage/index.html` を開くと
+行単位でどこを通っていないか確認できる。
+
+**カバレッジは抜けを探す道具として使い、達成すべき数値としては扱わない。**
+呼ぶだけで何も検証しないテストでも数字は上がるため、目標にすると価値の低いテストが増える。
+
+#### 置き場とファイル名
+
+対象と同じ階層の `__tests__/` に置く。
 
 ```text
 src/lib/calendar/
-  format.ts
   __tests__/
     format.test.ts
+  format.ts
 ```
 
-| 名前 | 対象 | 実行環境 |
-|---|---|---|
-| `*.test.ts` | ロジックとクエリ | node |
-| `*.svelte.test.ts` | コンポーネント | ブラウザ |
+**テスト内で runes（`$state` など）を使う場合は、ファイル名に `.svelte` を含める。**
+含めないと Svelte のコンパイラを通らず、rune が関数として解決できずに落ちる。
 
-**目で見て分からない壊れ方をするものを優先する。** 画面は開けば分かるが、境界値は見ても分からない。
+```text
+format.ts        →  __tests__/format.test.ts
+<名前>.svelte.ts →  __tests__/<名前>.svelte.test.ts
+```
 
-- ロジックの境界値を1つずつ押さえる。価格帯の 300/301/499/500、月またぎの日時、LIKE の特殊文字
-- 漏らしてはいけないものは、漏れていないことをテストで押さえる。エラー文の畳み込み、戻り先の制限
-- クエリはモックせず、使い捨てのインメモリ SQLite に流して検証する。D1 は SQLite 互換のため挙動が一致する。本番・開発の DB には触れない
-- モックするのは外部 HTTP・R2・時刻のような、遅いか再現できないものだけ
-- ロジックはコンポーネントの外に出し、関数としてテストできる形に保つ
-- コンポーネントのテストは操作のロジックを持つものだけに書く。表示だけのものは書かない
-- 見た目はテストしない。スナップショットテストは使わない
-- カバレッジの目標値は置かない
+#### 何を書くか
+
+コンポーネントをテストする前に、中のロジックを切り出して単体でテストできないか考える。
+切り出せるならそちらを対象にする。
+
+次のものを優先する。
+
+- 手で再現しにくいもの。並行制御、失敗時の分岐、時間に依存するもの
+- 壊れても画面から気づきにくいもの。エラーの正規化など、表示より手前の層
+
+表示だけの部品には書かない。
 
 ### 確認
 
 区切りごとに次を通す。
 
 ```bash
-pnpm check            # svelte-check。型エラーの検出
-pnpm lint             # prettier + eslint
-pnpm format           # 整形
-pnpm test:unit --run  # テスト
+pnpm check   # svelte-check。型エラーの検出
+pnpm lint    # prettier + eslint
+pnpm format  # 整形
+pnpm test    # テスト
 ```

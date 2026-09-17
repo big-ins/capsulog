@@ -26,6 +26,13 @@ export default defineConfig({
 	],
 	test: {
 		expect: { requireAssertions: true },
+		coverage: {
+			// 抜けを探すための道具。閾値は置かない。
+			// 表示だけの部品にはテストを書かないので、混ざると抜けが埋もれる
+			include: ['src/lib/**/*.ts'],
+			exclude: ['src/lib/common/testing/**'],
+			reporter: ['text', 'html']
+		},
 		projects: [
 			{
 				extends: './vite.config.ts',

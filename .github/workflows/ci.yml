@@ -27,7 +27,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm lint
-      - run: pnpm test:unit --run
+      - run: pnpm test
 
   batch:
     runs-on: ubuntu-latest
