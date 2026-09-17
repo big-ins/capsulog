@@ -7,6 +7,7 @@
 	import * as Select from '$lib/common/components/ui/select';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { shiftYearMonth } from '$lib/calendar/format';
+	import { appendGroups } from '$lib/calendar/list';
 	import FlipText from '$lib/common/components/FlipText.svelte';
 	import FlipNumber from '$lib/common/components/FlipNumber.svelte';
 	import EmptyState from '$lib/calendar/components/EmptyState.svelte';
@@ -91,20 +92,6 @@
 	let nextOffset = $state(untrack(() => data.nextOffset));
 	let hasMore = $state(untrack(() => data.hasMore));
 
-	/* 月の箱を保ったまま後ろに繋ぐ。境目が同じ月なら1つにまとめる */
-	function append(base: MonthGroupData[], incoming: MonthGroupData[]): MonthGroupData[] {
-		const merged = base.map((group) => ({ ...group, items: [...group.items] }));
-		for (const group of incoming) {
-			const last = merged.at(-1);
-			if (last && last.yearMonth === group.yearMonth && last.heading === group.heading) {
-				last.items.push(...group.items);
-			} else {
-				merged.push({ ...group, items: [...group.items] });
-			}
-		}
-		return merged;
-	}
-
 	/*
 	 * load がやり直されるたびに走る。
 	 * offset があれば続きなので後ろへ足し、無ければ条件が変わったので置き換える。
@@ -114,7 +101,7 @@
 		const isMore = data.offset > 0;
 		// groups を読むと依存に入って更新が止まる。前の値は untrack して取る
 		groups = isMore
-			? append(
+			? appendGroups(
 					untrack(() => groups),
 					incoming
 				)
