@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { currentYearMonth } from '../format';
 
 	type Step = { month: string; href: string };
@@ -54,9 +56,10 @@
 		<span class="ml-auto grid w-45 flex-none grid-cols-3 gap-1.5">
 			<a
 				href={steps.previous.href}
-				class="pressable rounded-full bg-surface py-1.5 text-center text-note font-bold shadow-clay-sm"
+				class="pressable flex items-center justify-center gap-1 rounded-full bg-surface py-1.5 text-center text-note font-bold shadow-clay-sm"
 			>
-				← {steps.previous.month}月
+				<ArrowLeft size={13} aria-hidden="true" />
+				{steps.previous.month}月
 			</a>
 			{#if steps.home}
 				<a
@@ -70,9 +73,10 @@
 			{/if}
 			<a
 				href={steps.next.href}
-				class="pressable rounded-full bg-surface py-1.5 text-center text-note font-bold shadow-clay-sm"
+				class="pressable flex items-center justify-center gap-1 rounded-full bg-surface py-1.5 text-center text-note font-bold shadow-clay-sm"
 			>
-				{steps.next.month}月 →
+				{steps.next.month}月
+				<ArrowRight size={13} aria-hidden="true" />
 			</a>
 		</span>
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->

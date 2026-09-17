@@ -176,6 +176,22 @@ Svelte 5 の runes で書く。`$state` `$derived` `$props` を使う。
 部品は `shadcn-svelte` で `common/components/ui/` に書き出し、**クラスを独自トークンに書き換えて使う。**
 書き出したものは自分のコードなので、`bg-popover` のような shadcn のトークンは残さない。色の定義を1系統に保つため。
 
+### アイコン
+
+**`@lucide/svelte` を使う。** 記号や矢印を文字や `<svg>` で直に書かない。
+線の太さと角の丸みが揃い、大きさも色も同じ書き方で変えられる。
+
+```svelte
+import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
+
+<SlidersHorizontal size={18} aria-hidden="true" />
+```
+
+**自作するのは、lucide に無いものだけ。** カプセルの絵のような題材そのものの形と、
+Google のようなブランドのマークがこれにあたる。ブランドのマークは商標のため lucide には入っていない。
+
+自作したものは `<svg>` で書き、置き場は使う機能の `components/` にする。
+
 ### ディレクトリ
 
 機能ごとにまとめる。横割り（components 全部・types 全部）にしない。

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import { formatRelease, releaseStatus } from '$lib/calendar/format';
 	import CapsuleBullet from '$lib/calendar/components/CapsuleBullet.svelte';
 	import CapsuleRow from '$lib/calendar/components/CapsuleRow.svelte';
@@ -105,9 +107,10 @@
 		href={product.officialUrl}
 		target="_blank"
 		rel="noopener noreferrer"
-		class="pressable rounded-full bg-accent py-3 text-center text-body font-bold text-on-accent shadow-clay-pressed"
+		class="pressable inline-flex items-center justify-center gap-1 rounded-full bg-accent py-3 text-center text-body font-bold text-on-accent shadow-clay-pressed"
 	>
-		公式サイトで見る ↗
+		公式サイトで見る
+		<ArrowUpRight size={16} aria-hidden="true" />
 	</a>
 	<p class="text-center text-note text-faint">情報の出典はメーカー公式サイト</p>
 
@@ -136,9 +139,10 @@
 		<!-- resolve() 起点でクエリを足すが、静的解析では追えない -->
 		<a
 			href={back ? `${resolve('/')}?${back}` : resolve('/')}
-			class="pressable pointer-events-auto inline-block rounded-full bg-surface px-5 py-3 text-body font-extrabold shadow-clay"
+			class="pressable pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-surface px-5 py-3 text-body font-extrabold shadow-clay"
 		>
-			← カレンダー
+			<ArrowLeft size={16} aria-hidden="true" />
+			カレンダー
 		</a>
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 	</div>

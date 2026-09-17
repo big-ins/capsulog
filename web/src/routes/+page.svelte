@@ -6,6 +6,9 @@
 	import * as Popover from '$lib/common/components/ui/popover';
 	import * as Select from '$lib/common/components/ui/select';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
+	import X from '@lucide/svelte/icons/x';
 	import { shiftYearMonth } from '$lib/calendar/format';
 	import { appendGroups } from '$lib/calendar/list';
 	import FlipText from '$lib/common/components/FlipText.svelte';
@@ -311,21 +314,7 @@
 							: 'bg-surface shadow-clay-on-color'
 					]}
 				>
-					<!-- スライダーのアイコン -->
-					<svg
-						width="18"
-						height="18"
-						viewBox="0 0 18 18"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						aria-hidden="true"
-					>
-						<path d="M2 5h14M2 13h14" />
-						<circle cx="7" cy="5" r="2.2" fill="var(--surface)" />
-						<circle cx="12" cy="13" r="2.2" fill="var(--surface)" />
-					</svg>
+					<SlidersHorizontal size={18} aria-hidden="true" />
 					{#if applied.length > 0 && !filtersOpen}
 						<span
 							class="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-ink"
@@ -367,9 +356,10 @@
 			{#each applied as chip (chip.label)}
 				<a
 					href={chip.href}
-					class="pressable rounded-full bg-surface px-3.5 py-1.5 text-note font-bold text-accent shadow-clay-sm"
+					class="pressable inline-flex items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-note font-bold text-accent shadow-clay-sm"
 				>
-					{chip.label} ✕
+					{chip.label}
+					<X size={12} aria-hidden="true" />
 				</a>
 			{/each}
 		</div>
@@ -387,10 +377,15 @@
 	<!-- 商品が無い月でも並びは変えられる。出し入れすると月を送るたびにちらつく -->
 	<div class="flex items-center justify-between gap-2 pt-3">
 		{#if browseEntry}
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-			<a href={browseEntry.href} class="text-note font-bold text-faint hover:text-accent">
-				発売時期から探す →
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
+			<a
+				href={browseEntry.href}
+				class="inline-flex items-center gap-1 text-note font-bold text-faint hover:text-accent"
+			>
+				発売時期から探す
+				<ArrowRight size={12} aria-hidden="true" />
 			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{:else}
 			<span></span>
 		{/if}
@@ -547,7 +542,7 @@
 								: '発売月を年ごとに辿る'}
 						</span>
 					</span>
-					<span class="text-title font-extrabold text-accent">→</span>
+					<ArrowRight size={20} class="flex-none text-accent" aria-hidden="true" />
 				</a>
 				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/if}
