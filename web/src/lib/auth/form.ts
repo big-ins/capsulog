@@ -36,6 +36,9 @@ export function errorMessage(code: string | undefined | null): string {
 	return MESSAGES[code] ?? GENERIC;
 }
 
+/** サーバまで届かなかったとき。応答が無いのでコードも無い */
+export const OFFLINE_MESSAGE = '通信できませんでした。電波の届くところでお試しください';
+
 /**
  * ログインした後に戻る先。
  * 別のサイトへ送られないよう、自分のサイトの絶対パスだけを通す
