@@ -138,6 +138,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 | `BETTER_AUTH_URL` | サイトの URL |
 | `GOOGLE_CLIENT_ID` | Google Cloud Console で作る |
 | `GOOGLE_CLIENT_SECRET` | 同上 |
+| `RESEND_API_KEY` | 確認メールとパスワード再設定の送信に使う |
+| `MAIL_FROM` | 差出人。独自ドメインを認証するまでは `onboarding@resend.dev` |
 
 ### 決めたこと
 
@@ -149,6 +151,8 @@ Google とパスワードで別々のアカウントができると、棚が消�
 **退会は論理削除。** `deletedAt` を入れる。**弾くのは `hooks.server.ts`。**
 
 **期限切れの行は溜まる。** `cleanup/` の日次バッチが消す。
+
+**画面はアカウントの有無を伝えない。** 登録済みかどうかを区別して出すと、アドレスの一覧を作られる。
 
 セッションのトークンは DB に平文で入る。
 
@@ -185,15 +189,42 @@ src/
     calendar/                 機能ディレクトリ。shelf、trade も同じ形
       components/             この機能のコンポーネント
       types.ts                この機能の型
+      schemas.ts              この機能のフォームの形
       queries.server.ts       D1 への SQL。サーバ専用
+    auth/                     認証。画面から使うものとサーバ専用が混ざる
+      schemas.ts              ログイン・新規登録・再設定の形
+      fields.ts               users の独自の列。サーバとクライアントで共用
+      client.ts               画面から認証を呼ぶ入口
+      auth.server.ts          Better Auth の設定
+      mail.server.ts          Resend でのメール送信
     common/                   機能をまたぐもの
       components/             ヘッダーなど。ロジックは components の外に置く
+      form.ts                 スキーマで検証して、項目ごとのエラーにする
 ```
 
 `.server.ts` で終わるモジュールはサーバ専用になる。
 クライアント側に import されるとビルドが落ちるため、SQL や秘匿値はこの名前に置く。
 
 機能をまたいで使いたくなったものだけ `common/` へ出す。最初から共通化しない。
+
+### フォーム
+
+**入力の検証は zod で書く。** スキーマは機能ごとの `schemas.ts` に置き、画面とサーバで同じものを使う。
+
+`common/form.ts` の `parseForm()` に通すと、項目ごとのエラーになる。
+1つの項目に複数のエラーが出ても、画面に出すのは最初の1つだけにする。
+
+```ts
+const result = parseForm(signInSchema, { email, password });
+if (!result.ok) errors = result.errors;
+```
+
+**画面のエラーは、そのアドレスが登録されているかを教えない。**
+「登録済み」「未確認」「パスワードが違う」を区別して出すと、アドレスの一覧を作られる。
+サーバが返すコードの日本語化は `auth/form.ts` の `errorMessage()` が行い、
+アカウントの状態に関わるものはすべて同じ文に畳む。
+
+形式の誤りとリンクの期限切れはそのまま伝える。誰が見ても同じ結果になり、状態が漏れない。
 
 ### 状態
 
@@ -299,6 +330,7 @@ src/lib/calendar/
 **目で見て分からない壊れ方をするものを優先する。** 画面は開けば分かるが、境界値は見ても分からない。
 
 - ロジックの境界値を1つずつ押さえる。価格帯の 300/301/499/500、月またぎの日時、LIKE の特殊文字
+- 漏らしてはいけないものは、漏れていないことをテストで押さえる。エラー文の畳み込み、戻り先の制限
 - クエリはモックせず、使い捨てのインメモリ SQLite に流して検証する。D1 は SQLite 互換のため挙動が一致する。本番・開発の DB には触れない
 - モックするのは外部 HTTP・R2・時刻のような、遅いか再現できないものだけ
 - ロジックはコンポーネントの外に出し、関数としてテストできる形に保つ
