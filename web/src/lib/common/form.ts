@@ -1,6 +1,5 @@
 import type { ZodType } from 'zod';
 
-/** 項目名から、その項目のエラー文への対応。エラーが無い項目は持たない */
 export type FieldErrors<T> = Partial<Record<keyof T & string, string>>;
 
 export type ParseResult<T> =

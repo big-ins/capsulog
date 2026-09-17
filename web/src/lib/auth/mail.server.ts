@@ -35,7 +35,6 @@ export async function sendMail(env: MailEnv, mail: Mail): Promise<void> {
 	}
 }
 
-/** メールアドレスの確認 */
 export function verificationMail(url: string): Omit<Mail, 'to'> {
 	return {
 		subject: 'カプセログ メールアドレスの確認',
@@ -51,7 +50,6 @@ export function verificationMail(url: string): Omit<Mail, 'to'> {
 	};
 }
 
-/** パスワードの再設定 */
 export function resetPasswordMail(url: string): Omit<Mail, 'to'> {
 	return {
 		subject: 'カプセログ パスワードの再設定',

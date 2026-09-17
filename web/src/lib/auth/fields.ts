@@ -1,7 +1,4 @@
-/**
- * Better Auth が持たないユーザーの列。
- * サーバの設定とクライアントの型で同じものを使う
- */
+/* サーバの設定とクライアントの型で同じものを使う。auth.server.ts は画面から読めない */
 export const userFields = {
 	xHandle: { type: 'string', required: false, input: false },
 	icalToken: { type: 'string', required: false, input: false },
