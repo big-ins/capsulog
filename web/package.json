@@ -58,6 +58,7 @@
 		"wrangler": "^4.127.1"
 	},
 	"dependencies": {
-		"better-auth": "^1.7.4"
+		"better-auth": "^1.7.4",
+		"zod": "^4.6.5"
 	}
 }
