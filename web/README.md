@@ -142,6 +142,46 @@ export const load: PageServerLoad = async ({ locals }) => {
 | `RESEND_API_KEY` | 確認メールとパスワード再設定の送信に使う |
 | `MAIL_FROM` | 差出人。独自ドメインを認証するまでは `onboarding@resend.dev` |
 
+### 外部サービスの登録
+
+**どちらもブラウザでの操作が要る。** アカウント作成にメール確認が挟まり、CLI では完結しない。
+
+#### Cookie の署名鍵を作る
+
+```bash
+openssl rand -base64 32
+```
+
+出た値を `.dev.vars` の `BETTER_AUTH_SECRET` に入れる。
+
+#### Resend のアカウントを作る
+
+1. <https://resend.com/signup> でアカウントを作る
+2. 届いたメールのリンクを開いて確認を済ませる
+3. <https://resend.com/api-keys> で `Create API Key` を押す
+4. 名前は `capsulog-dev`、権限は `Sending access` を選ぶ
+5. 出たキーを `.dev.vars` の `RESEND_API_KEY` に入れる。**この画面を閉じると二度と見られない**
+
+独自ドメインを認証するまで、差出人は `onboarding@resend.dev` になる。
+このとき**宛先は登録した自分のアドレスに限られる**。他人には届かない。
+
+#### Google の OAuth クライアントを作る
+
+1. <https://console.cloud.google.com/> でプロジェクトを作る。名前は `capsulog`
+2. `APIs & Services` > `OAuth consent screen` で `External` を選ぶ
+3. アプリ名に `カプセログ`、サポートメールに自分のアドレスを入れる
+4. `APIs & Services` > `Credentials` > `Create Credentials` > `OAuth client ID`
+5. 種類は `Web application`
+6. `Authorized redirect URIs` に次を入れる
+
+   ```text
+   http://localhost:5173/api/auth/callback/google
+   ```
+
+7. 出た ID とシークレットを `.dev.vars` の `GOOGLE_CLIENT_ID` と `GOOGLE_CLIENT_SECRET` に入れる
+
+独自ドメインを取ったら、本番の URL も `Authorized redirect URIs` に足す。
+
 ### 決めたこと
 
 **確認が済むまでログインさせない。** 他人のアドレスで登録したものを動かさないため。
