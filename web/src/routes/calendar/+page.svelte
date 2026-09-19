@@ -284,7 +284,7 @@
 			</span>
 		</div>
 		<div class="flex max-w-xl items-center gap-2.5 pt-4">
-			<form method="GET" action="/" class="flex-1">
+			<form method="GET" action="/calendar" class="flex-1">
 				{#if data.filters.month}<input type="hidden" name="month" value={data.filters.month} />{/if}
 				{#if data.filters.makerCode}<input
 						type="hidden"
