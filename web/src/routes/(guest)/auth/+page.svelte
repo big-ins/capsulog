@@ -8,7 +8,7 @@
 	import { fold } from '$lib/common/transition';
 	import { authClient } from '$lib/auth/client';
 	import { errorMessage, OFFLINE_MESSAGE, type AuthMode } from '$lib/auth/form';
-	import { signInSchema, signUpSchema } from '$lib/auth/schemas';
+	import { requestResetSchema, signInSchema, signUpSchema } from '$lib/auth/schemas';
 	import { parseForm, type FieldErrors } from '$lib/common/form';
 	import AuthField from '$lib/auth/components/AuthField.svelte';
 	import GoogleButton from '$lib/auth/components/GoogleButton.svelte';
@@ -41,6 +41,8 @@
 	let errors = $state<FieldErrors<typeof form>>({});
 	let submitError = $state('');
 	let busy = $state(false);
+
+	/* メールを送った先。送信後の画面に切り替わる */
 	let sentTo = $state('');
 
 	const COPY = {
@@ -50,7 +52,10 @@
 			submit: 'ログイン',
 			working: '確認しています',
 			alt: 'はじめての方はこちら',
-			altMode: 'signup'
+			altMode: 'signup',
+			sentTitle: '',
+			sentLead: '',
+			sentNote: ''
 		},
 		signup: {
 			title: 'カプセログをはじめる',
@@ -58,11 +63,28 @@
 			submit: '登録する',
 			working: '登録しています',
 			alt: 'アカウントをお持ちの方はこちら',
-			altMode: 'login'
+			altMode: 'login',
+			sentTitle: 'メールを送りました',
+			sentLead: 'メールのリンクから、登録を完了できます。',
+			sentNote: 'リンクの期限は24時間です。'
+		},
+		reset: {
+			title: 'パスワードの再設定',
+			social: '',
+			submit: '再設定のリンクを送る',
+			working: '送っています',
+			alt: 'ログインへ戻る',
+			altMode: 'login',
+			sentTitle: 'メールを送りました',
+			sentLead: 'メールのリンクから、パスワードを再設定できます。',
+			sentNote: 'リンクの期限は1時間です。'
 		}
 	} as const satisfies Record<AuthMode, Record<string, string>>;
 
 	let copy = $derived(COPY[shown]);
+
+	/* 再設定はメールアドレスだけ。パスワードも Google も出さない */
+	let isReset = $derived(shown === 'reset');
 
 	/* 登録すると何ができるか。登録の前にしか見せない */
 	const BENEFITS = [
@@ -83,9 +105,10 @@
 		switching = true;
 
 		// 先に画面を動かす。文言も欄もここで一斉に変わる
+		const closing = fields(shown) > fields(next);
 		shown = next;
 		// 動きが終わってから URL を合わせる。走っている最中に load が挟まると動きが飛ぶ
-		await wait(next === 'signup' ? OPEN.duration : CLOSE.duration);
+		await wait(closing ? CLOSE.duration : OPEN.duration);
 
 		// 履歴を汚さない。戻るで前のモードへ寄り道させない。
 		// resolve() 起点でクエリを足すが、静的解析では追えない
@@ -102,42 +125,64 @@
 		return new Promise((resolve) => setTimeout(resolve, duration));
 	}
 
+	/* 欄の数。減るほうへ動くときは閉じる動きになり、開くより短く終わる */
+	function fields(mode: AuthMode): number {
+		if (mode === 'signup') return 3;
+		if (mode === 'login') return 2;
+		return 1;
+	}
+
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		// disabled はボタン経由にしか効かない。入力欄での Enter が素通りする
 		if (busy) return;
 
 		submitError = '';
-		const result = isSignUp
-			? parseForm(signUpSchema, form)
-			: parseForm(signInSchema, { email: form.email, password: form.password });
+		const result = validate();
 		errors = result.errors;
 		if (!result.ok) return;
 
 		busy = true;
 		try {
 			// 認証の失敗は error に入る。例外で飛ぶのは通信が切れたとき
-			const { error } = isSignUp
-				? // 確認のリンクを開いた先。ここではまだログインしていない
-					await authClient.signUp.email({ ...form, callbackURL: resolve('/auth/verified') })
-				: await authClient.signIn.email({ email: form.email, password: form.password });
+			const { error } = await send();
 
 			if (error) {
 				submitError = errorMessage(error.code);
 				return;
 			}
-			if (isSignUp) {
-				// 登録済みのアドレスでも同じ画面を出す。ここで分けると登録の有無が分かる
-				sentTo = form.email;
+			if (shown === 'login') {
+				// 行き先は safeRedirect() で自分のサイトに限ってある
+				await goto(data.redirectTo, { invalidateAll: true });
 				return;
 			}
-			// 行き先は safeRedirect() で自分のサイトに限ってある
-			await goto(data.redirectTo, { invalidateAll: true });
+			// 登録や再設定の有無に関わらず同じ画面を出す。分けると登録の有無が分かる
+			sentTo = form.email;
 		} catch {
 			submitError = OFFLINE_MESSAGE;
 		} finally {
 			busy = false;
 		}
+	}
+
+	function validate() {
+		if (isSignUp) return parseForm(signUpSchema, form);
+		if (isReset) return parseForm(requestResetSchema, { email: form.email });
+		return parseForm(signInSchema, { email: form.email, password: form.password });
+	}
+
+	function send() {
+		if (isSignUp) {
+			// 確認のリンクを開いた先。ここではまだログインしていない
+			return authClient.signUp.email({ ...form, callbackURL: resolve('/auth/verified') });
+		}
+		if (isReset) {
+			return authClient.requestPasswordReset({
+				email: form.email,
+				redirectTo: resolve('/auth/reset/new')
+			});
+		}
+		return authClient.signIn.email({ email: form.email, password: form.password });
 	}
 </script>
 
@@ -153,16 +198,16 @@
 -->
 <main class="mx-auto flex w-full max-w-sm flex-col gap-5 px-4 pt-24 pb-16 sm:max-w-md sm:pt-28">
 	{#if sentTo}
-		<h1 class="px-1 text-title font-extrabold sm:text-site">メールを送りました</h1>
+		<h1 class="px-1 text-title font-extrabold sm:text-site">{copy.sentTitle}</h1>
 		<div class="relative overflow-hidden rounded-3xl bg-surface p-5 shadow-clay sm:p-7">
 			<span class="deco-circle absolute -top-4 -right-4 h-14 w-14 opacity-10" aria-hidden="true"
 			></span>
 			<div class="relative flex flex-col gap-3">
 				<p class="text-heading font-bold break-all">{sentTo}</p>
-				<p class="text-body leading-relaxed">メールのリンクから、登録を完了できます。</p>
+				<p class="text-body leading-relaxed">{copy.sentLead}</p>
 				<p class="text-note leading-relaxed text-faint">
 					メールが見つからないときは、迷惑メールに振り分けられていないか確かめてください。
-					リンクの期限は24時間です。
+					{copy.sentNote}
 				</p>
 			</div>
 		</div>
@@ -207,18 +252,25 @@
 			></span>
 
 			<div class="relative flex flex-col gap-5">
-				<GoogleButton
-					label={copy.social}
-					redirectTo={data.redirectTo}
-					bind:busy
-					onfail={(message) => (submitError = message)}
-				/>
+				{#if !isReset}
+					<!-- 再設定は本人のメールに送る手続き。他のログイン手段は関わらない -->
+					<div in:fold={OPEN} out:fold={CLOSE}>
+						<div class="flex flex-col gap-5">
+							<GoogleButton
+								label={copy.social}
+								redirectTo={data.redirectTo}
+								bind:busy
+								onfail={(message) => (submitError = message)}
+							/>
 
-				<div class="flex items-center gap-3 text-note font-bold text-faint">
-					<span class="h-px flex-1 bg-faint/25"></span>
-					または
-					<span class="h-px flex-1 bg-faint/25"></span>
-				</div>
+							<div class="flex items-center gap-3 text-note font-bold text-faint">
+								<span class="h-px flex-1 bg-faint/25"></span>
+								または
+								<span class="h-px flex-1 bg-faint/25"></span>
+							</div>
+						</div>
+					</div>
+				{/if}
 
 				<form class="flex flex-col gap-4" onsubmit={submit} novalidate>
 					{#if isSignUp}
@@ -244,15 +296,20 @@
 						bind:value={form.email}
 						error={errors.email}
 					/>
-					<AuthField
-						id="password"
-						label="パスワード"
-						type="password"
-						autocomplete={isSignUp ? 'new-password' : 'current-password'}
-						placeholder={isSignUp ? '8文字以上' : undefined}
-						bind:value={form.password}
-						error={errors.password}
-					/>
+					{#if !isReset}
+						<!-- 再設定はまだ本人か分からない。パスワードは聞かない -->
+						<div in:fold={OPEN} out:fold={CLOSE}>
+							<AuthField
+								id="password"
+								label="パスワード"
+								type="password"
+								autocomplete={isSignUp ? 'new-password' : 'current-password'}
+								placeholder={isSignUp ? '8文字以上' : undefined}
+								bind:value={form.password}
+								error={errors.password}
+							/>
+						</div>
+					{/if}
 
 					<SubmitError message={submitError} />
 
@@ -275,11 +332,15 @@
 			>
 				{copy.alt}
 			</button>
-			{#if !isSignUp}
-				<!-- 登録のときは出さない。まだアカウントが無い -->
-				<a href={resolve('/auth/reset')} class="text-note font-bold text-faint underline">
+			{#if shown === 'login'}
+				<!-- 登録と再設定のときは出さない。登録はまだアカウントが無く、再設定はいま其処に居る -->
+				<button
+					type="button"
+					onclick={() => switchMode('reset')}
+					class="text-body font-bold text-faint underline"
+				>
 					パスワードを忘れた
-				</a>
+				</button>
 			{/if}
 		</div>
 	{/if}

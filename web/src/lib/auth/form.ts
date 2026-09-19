@@ -49,10 +49,12 @@ export function safeRedirect(value: string | null): string {
 	return value;
 }
 
-/** ログインと新規登録のどちらを見せているか */
-export type AuthMode = 'login' | 'signup';
+/** 認証の入口として、どれを見せているか */
+export type AuthMode = 'login' | 'signup' | 'reset';
+
+const MODES = new Set<string>(['login', 'signup', 'reset']);
 
 /** 知らない値は、持っている人の多いログインに寄せる */
 export function authMode(value: string | null): AuthMode {
-	return value === 'signup' ? 'signup' : 'login';
+	return value && MODES.has(value) ? (value as AuthMode) : 'login';
 }

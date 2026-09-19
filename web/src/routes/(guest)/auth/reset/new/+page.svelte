@@ -61,8 +61,10 @@
 				<p class="text-body leading-relaxed">
 					期限が切れているか、すでに使われています。もう一度お試しください。
 				</p>
+				<!-- resolve() 起点でクエリを足すが、静的解析では追えない -->
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a
-					href={resolve('/auth/reset')}
+					href="{resolve('/auth')}?mode=reset"
 					class="pressable rounded-full bg-accent py-3 text-center text-body font-bold text-on-accent shadow-clay-pressed sm:py-3.5"
 				>
 					リンクを送り直す

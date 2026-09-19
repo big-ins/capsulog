@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { errorMessage, safeRedirect } from '../form';
+import { authMode, errorMessage, safeRedirect } from '../form';
 
 describe('errorMessage', () => {
 	const hidden = [
@@ -50,5 +50,19 @@ describe('safeRedirect', () => {
 	it('空と null は先頭に戻す', () => {
 		expect(safeRedirect(null)).toBe('/');
 		expect(safeRedirect('')).toBe('/');
+	});
+});
+
+describe('authMode', () => {
+	it('知っている値はそのまま通す', () => {
+		expect(authMode('login')).toBe('login');
+		expect(authMode('signup')).toBe('signup');
+		expect(authMode('reset')).toBe('reset');
+	});
+
+	it('知らない値と null はログインになる', () => {
+		expect(authMode('shelf')).toBe('login');
+		expect(authMode('')).toBe('login');
+		expect(authMode(null)).toBe('login');
 	});
 });
