@@ -43,7 +43,7 @@
 	class="fixed inset-x-0 bottom-0 z-30 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden"
 	aria-label="メインメニュー"
 >
-	<ul class="relative mx-auto flex max-w-sm rounded-full bg-surface p-1.5 shadow-clay">
+	<ul class="relative mx-auto flex max-w-sm rounded-full bg-surface p-1.5 shadow-clay-fixed">
 		{#if currentIndex >= 0}
 			<!-- 選択中の項目に敷く面。幅は項目数で割り、左端からの距離で位置を決める -->
 			<li

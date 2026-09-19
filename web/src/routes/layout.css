@@ -46,6 +46,10 @@
 		9px 11px 22px var(--sh), -5px -5px 12px var(--hi), inset 2px 3px 5px var(--hi-in),
 		inset -3px -5px 9px var(--sh-in);
 	--shadow-clay-sm: 4px 5px 10px var(--sh), -3px -3px 8px var(--hi);
+	/* 画面に固定するとき。後ろを中身が通るので、外側の白いハイライトを落とす。
+	   残すと下の文字に白い靄が乗って霞む。内側の明暗は面の中なので影響しない */
+	--shadow-clay-fixed:
+		9px 11px 22px var(--sh), inset 2px 3px 5px var(--hi-in), inset -3px -5px 9px var(--sh-in);
 	/* 色エリアに置くとき。白いハイライトは地色から浮いて滲むため落とす */
 	--shadow-clay-on-color: 3px 4px 10px rgba(90, 40, 35, 0.18);
 	--shadow-clay-pressed:
