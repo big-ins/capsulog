@@ -35,7 +35,13 @@ export function createAuth(env: App.Platform['env']) {
 		socialProviders: {
 			google: {
 				clientId: env.GOOGLE_CLIENT_ID,
-				clientSecret: env.GOOGLE_CLIENT_SECRET
+				clientSecret: env.GOOGLE_CLIENT_SECRET,
+				/*
+				 * プロフィール画像を受け取らない。
+				 * 入るのは Google 側にある画像の URL で、出すとホットリンクになる。
+				 * 画像はユーザーが撮った現物写真だけを扱う
+				 */
+				mapProfileToUser: () => ({ image: undefined })
 			}
 		},
 		account: {
