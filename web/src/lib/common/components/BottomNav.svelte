@@ -40,7 +40,7 @@
 </script>
 
 <nav
-	class="fixed inset-x-0 bottom-0 z-10 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden"
+	class="fixed inset-x-0 bottom-0 z-30 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden"
 	aria-label="メインメニュー"
 >
 	<ul class="relative mx-auto flex max-w-sm rounded-full bg-surface p-1.5 shadow-clay">
