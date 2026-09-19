@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { NAV_ITEMS, isCurrent } from '$lib/common/nav';
 
 	let scrollY = $state(0);
 	let heroHeight = $state(0);
@@ -23,10 +24,37 @@
 		floating ? 'floating text-accent' : 'text-white'
 	]}
 >
-	<div class="mx-auto max-w-2xl lg:max-w-5xl">
+	<div class="mx-auto flex max-w-2xl items-center gap-8 lg:max-w-5xl">
 		<a href={resolve('/')} class="text-site font-extrabold">
 			カプセ<span class="text-ink">ログ</span>
 		</a>
+
+		<!-- 狭い画面は下部ナビが受け持つ -->
+		<nav class="hidden lg:block" aria-label="メインメニュー">
+			<ul class="flex items-center gap-6">
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
+				<!-- 行き先は nav.ts で resolve() 済みだが、静的解析では追えない -->
+				{#each NAV_ITEMS as item (item.label)}
+					{@const current = isCurrent(item, page.url.pathname)}
+					<li>
+						{#if item.href}
+							<a
+								href={item.href}
+								class={['text-body font-bold transition-opacity', current ? '' : 'opacity-60']}
+								aria-current={current ? 'page' : undefined}
+							>
+								{item.label}
+							</a>
+						{:else}
+							<span class="text-body font-bold opacity-40" aria-disabled="true" title="準備中">
+								{item.label}
+							</span>
+						{/if}
+					</li>
+				{/each}
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
+			</ul>
+		</nav>
 	</div>
 </header>
 
