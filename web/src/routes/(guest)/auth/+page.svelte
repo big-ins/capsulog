@@ -301,6 +301,24 @@
 						</div>
 					{/if}
 
+					{#if shown === 'login'}
+						<!--
+						  忘れたと気づくのはパスワードを入れようとした時なので、欄のそばに置く。
+						  パスワード欄とは出す条件が違うため、開閉も分ける
+						-->
+						<div in:fold={OPEN} out:fold={CLOSE}>
+							<div class="flex justify-end">
+								<button
+									type="button"
+									onclick={() => switchMode('reset')}
+									class="text-note font-bold text-faint underline"
+								>
+									パスワードを忘れた
+								</button>
+							</div>
+						</div>
+					{/if}
+
 					<SubmitError message={submitError} />
 
 					<button
@@ -314,7 +332,7 @@
 			</div>
 		</div>
 
-		<div class="flex flex-col items-center gap-2.5">
+		<div class="flex justify-center">
 			<button
 				type="button"
 				onclick={() => switchMode(copy.altMode)}
@@ -322,16 +340,6 @@
 			>
 				{copy.alt}
 			</button>
-			{#if shown === 'login'}
-				<!-- 登録と再設定のときは出さない。登録はまだアカウントが無く、再設定はいま其処に居る -->
-				<button
-					type="button"
-					onclick={() => switchMode('reset')}
-					class="text-body font-bold text-faint underline"
-				>
-					パスワードを忘れた
-				</button>
-			{/if}
 		</div>
 	{/if}
 </main>
