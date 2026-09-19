@@ -238,48 +238,13 @@
 	/>
 </svelte:head>
 
-<!-- 上部の色エリア。固定ヘッダーの分だけ上に余白を取り、中身が高さを決める -->
-<div data-hero class="relative overflow-hidden bg-accent px-4 pt-20 pb-7">
-	<div class="relative mx-auto max-w-2xl lg:max-w-5xl">
-		<!-- 円とカプセルは列の内側に置く。画面端に寄せると偶然そこにある形に見える -->
-		<div
-			class="absolute top-2 -right-24 h-56 w-56 rounded-full bg-white/15"
-			aria-hidden="true"
-		></div>
-		<div class="absolute -top-4 right-[10%] hidden -rotate-12 sm:block" aria-hidden="true">
-			<svg width="60" height="69" viewBox="0 0 40 46">
-				<path d="M4 24 h32 v4 a16 16 0 0 1 -32 0 z" fill="#fffefd" />
-				<path d="M4 24 a16 16 0 0 1 32 0 z" fill="#64bfae" />
-				<ellipse
-					cx="13"
-					cy="14"
-					rx="4.5"
-					ry="6.5"
-					fill="#ffffff"
-					opacity="0.4"
-					transform="rotate(-25 13 14)"
-				/>
-			</svg>
-		</div>
-		<div class="absolute top-10 right-[24%] hidden rotate-12 sm:block" aria-hidden="true">
-			<svg width="40" height="46" viewBox="0 0 40 46">
-				<path d="M4 24 h32 v4 a16 16 0 0 1 -32 0 z" fill="#fffefd" />
-				<path d="M4 24 a16 16 0 0 1 32 0 z" fill="#e8a94f" />
-			</svg>
-		</div>
-		<div class="absolute top-14 right-[3%] hidden rotate-6 opacity-60 sm:block" aria-hidden="true">
-			<svg width="32" height="37" viewBox="0 0 40 46">
-				<path d="M4 24 h32 v4 a16 16 0 0 1 -32 0 z" fill="#fffefd" />
-				<path d="M4 24 a16 16 0 0 1 32 0 z" fill="#8a92e3" />
-			</svg>
-		</div>
-
-		<p class="text-heading font-bold text-white">カプセルトイの新作を、メーカー横断でチェック</p>
-		<div class="flex flex-wrap gap-2 pt-2.5" aria-label="掲載の規模">
-			<span class="rounded-full bg-white/20 px-3 py-1 text-note font-bold text-white">
+<main class="mx-auto max-w-2xl px-4 pt-24 pb-16 lg:max-w-5xl">
+	<div class="relative">
+		<div class="flex flex-wrap gap-2" aria-label="掲載の規模">
+			<span class="rounded-full bg-surface px-3 py-1 text-note font-bold text-faint shadow-clay-sm">
 				今月の新作 <FlipNumber value={data.counts.thisMonth} />件
 			</span>
-			<span class="rounded-full bg-white/20 px-3 py-1 text-note font-bold text-white">
+			<span class="rounded-full bg-surface px-3 py-1 text-note font-bold text-faint shadow-clay-sm">
 				{data.makers.length}社 <FlipNumber value={data.counts.total} />件を掲載
 			</span>
 		</div>
@@ -301,7 +266,7 @@
 					name="q"
 					value={data.filters.keyword ?? ''}
 					placeholder="商品名で検索"
-					class="w-full rounded-full bg-surface px-5 py-2 text-input shadow-clay-on-color outline-none placeholder:text-faint focus:ring-2 focus:ring-white"
+					class="w-full rounded-full bg-surface px-5 py-2 text-input shadow-clay-inset outline-none placeholder:text-faint focus:ring-2 focus:ring-accent/40"
 				/>
 			</form>
 			<!-- 絞り込みは並び替えと同じ扱いにする。押した場所から開き、外を触れば閉じる -->
@@ -310,9 +275,7 @@
 					aria-label="絞り込み"
 					class={[
 						'pressable relative grid h-10 w-10 flex-none place-items-center rounded-full',
-						filtersOpen
-							? 'bg-ink text-white shadow-clay-pressed'
-							: 'bg-surface shadow-clay-on-color'
+						filtersOpen ? 'bg-ink text-white shadow-clay-pressed' : 'bg-surface shadow-clay-sm'
 					]}
 				>
 					<SlidersHorizontal size={18} aria-hidden="true" />
@@ -349,9 +312,7 @@
 			</Popover.Root>
 		</div>
 	</div>
-</div>
 
-<main class="mx-auto max-w-2xl px-4 pb-16 lg:max-w-5xl">
 	{#if applied.length > 0}
 		<div class="flex flex-wrap gap-2 pt-3" aria-label="選択中の条件">
 			{#each applied as chip (chip.label)}
