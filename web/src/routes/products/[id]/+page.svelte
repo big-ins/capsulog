@@ -129,7 +129,7 @@
 <!-- スクロールしても付いてくるので、本文ではなくヘッダーと同じ幅に揃える -->
 <!-- 引っ込むときは invisible も付ける。見えないものを Enter で押せないようにする -->
 <div
-	class="pointer-events-none fixed inset-x-0 bottom-24 z-10 px-4 transition-all duration-300 motion-reduce:transition-none lg:bottom-5"
+	class="pointer-events-none fixed inset-x-0 bottom-32 z-10 px-4 transition-all duration-300 motion-reduce:transition-none lg:bottom-5"
 	class:translate-y-24={hidden}
 	class:opacity-0={hidden}
 	class:invisible={hidden}

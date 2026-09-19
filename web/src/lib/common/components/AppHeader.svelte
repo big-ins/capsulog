@@ -31,22 +31,32 @@
 
 		<!-- 狭い画面は下部ナビが受け持つ -->
 		<nav class="hidden lg:block" aria-label="メインメニュー">
-			<ul class="flex items-center gap-6">
+			<ul class="flex items-center gap-1">
 				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<!-- 行き先は nav.ts で resolve() 済みだが、静的解析では追えない -->
 				{#each NAV_ITEMS as item (item.label)}
 					{@const current = isCurrent(item, page.url.pathname)}
 					<li>
 						{#if item.href}
+							<!-- 色エリアの上では白いピル。白帯に変わったらアクセント色に入れ替える -->
 							<a
 								href={item.href}
-								class={['text-body font-bold transition-opacity', current ? '' : 'opacity-60']}
+								class={[
+									'pressable-flat block rounded-full px-4 py-1.5 text-body font-bold transition-colors',
+									current && floating && 'bg-accent text-on-accent shadow-clay-pressed',
+									current && !floating && 'bg-white text-accent shadow-clay-on-color',
+									!current && 'opacity-60'
+								]}
 								aria-current={current ? 'page' : undefined}
 							>
 								{item.label}
 							</a>
 						{:else}
-							<span class="text-body font-bold opacity-40" aria-disabled="true" title="準備中">
+							<span
+								class="block px-4 py-1.5 text-body font-bold opacity-40"
+								aria-disabled="true"
+								title="準備中"
+							>
 								{item.label}
 							</span>
 						{/if}
