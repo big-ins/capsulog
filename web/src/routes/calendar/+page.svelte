@@ -13,6 +13,7 @@
 	import { appendGroups } from '$lib/calendar/list';
 	import FlipText from '$lib/common/components/FlipText.svelte';
 	import FlipNumber from '$lib/common/components/FlipNumber.svelte';
+	import PageHeading from '$lib/common/components/PageHeading.svelte';
 	import EmptyState from '$lib/calendar/components/EmptyState.svelte';
 	import MonthGroup from '$lib/calendar/components/MonthGroup.svelte';
 	import MonthHeading from '$lib/calendar/components/MonthHeading.svelte';
@@ -238,7 +239,8 @@
 	/>
 </svelte:head>
 
-<main class="mx-auto max-w-2xl px-4 pt-24 pb-16 lg:max-w-5xl">
+<main class="mx-auto max-w-2xl px-4 pt-6 pb-16 lg:max-w-5xl lg:pt-24">
+	<PageHeading title="カレンダー" />
 	<div class="relative">
 		<div class="flex flex-wrap gap-2" aria-label="掲載の規模">
 			<span class="rounded-full bg-surface px-3 py-1 text-note font-bold text-faint shadow-clay-sm">

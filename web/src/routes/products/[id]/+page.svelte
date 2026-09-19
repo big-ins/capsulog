@@ -39,11 +39,7 @@
 	<title>{product.name} | カプセログ</title>
 </svelte:head>
 
-<!-- 固定ヘッダーの背面に敷く色。最上部の白ロゴを読めるようにする。
-     高さはヘッダーに合わせる。余らせると帯だけが厚く見える -->
-<div data-hero class="absolute inset-x-0 top-0 -z-10 h-17 bg-accent" aria-hidden="true"></div>
-
-<main class="mx-auto flex max-w-2xl flex-col gap-5 px-4 pt-24 pb-28">
+<main class="mx-auto flex max-w-2xl flex-col gap-5 px-4 pt-6 pb-28 lg:pt-24">
 	<div>
 		<div class="flex items-center gap-2">
 			<MakerTag code={product.makerCode} name={product.makerName} />

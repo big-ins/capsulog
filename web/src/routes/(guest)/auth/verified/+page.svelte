@@ -7,9 +7,7 @@
 	<title>メールアドレスを確認しました | カプセログ</title>
 </svelte:head>
 
-<div data-hero class="absolute inset-x-0 top-0 -z-10 h-17 bg-accent" aria-hidden="true"></div>
-
-<main class="mx-auto flex w-full max-w-sm flex-col gap-5 px-4 pt-24 pb-16 sm:max-w-md sm:pt-28">
+<main class="mx-auto flex w-full max-w-sm flex-col gap-5 px-4 pt-6 pb-16 sm:max-w-md lg:pt-28">
 	<h1 class="px-1 text-title font-extrabold sm:text-site">確認できました</h1>
 
 	<div class="relative overflow-hidden rounded-3xl bg-surface p-5 shadow-clay sm:p-7">
