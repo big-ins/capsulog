@@ -33,11 +33,12 @@
 </span>
 
 <style>
+	/* 幅は等幅数字の1文字分。em で置くと書体の字幅と合わず、大きい字で左右が切れる */
 	.digit {
 		display: inline-block;
 		overflow: hidden;
 		height: 1.4em;
-		width: 0.58em;
+		width: 1ch;
 		vertical-align: bottom;
 		line-height: 1.4em;
 	}
