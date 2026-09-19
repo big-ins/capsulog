@@ -8,6 +8,35 @@
 	 * 1枚だけ持って左右に滑らせると、同じものが動いたように見える
 	 */
 	let currentIndex = $derived(NAV_ITEMS.findIndex((item) => isCurrent(item, page.url.pathname)));
+
+	let pill = $state<HTMLElement | null>(null);
+	let previousIndex = -1;
+
+	/* 移動と伸び縮みで共有する。ずれると伸びきる位置が動きの中ほどから外れる */
+	const SLIDE_MS = 200;
+
+	/*
+	 * 動いている間の変形。伸びきりは移動の中ほどで、そこから着地に向けて戻る。
+	 * 終わりだけで戻すと、丸まる瞬間が取ってつけたように見える。
+	 * CSS の遷移では途中の形を指定できないため、ここで直接再生する
+	 */
+	$effect(() => {
+		const next = currentIndex;
+		const target = pill;
+		const moved = previousIndex !== -1 && next !== previousIndex;
+		previousIndex = next;
+		if (!moved || !target) return;
+		if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+		target.animate(
+			[
+				{ transform: 'scale(1, 1)' },
+				{ transform: 'scale(1.14, 0.84)', offset: 0.45 },
+				{ transform: 'scale(1, 1)' }
+			],
+			{ duration: SLIDE_MS, easing: 'ease-in-out' }
+		);
+	});
 </script>
 
 <nav
@@ -18,8 +47,9 @@
 		{#if currentIndex >= 0}
 			<!-- 選択中の項目に敷く面。幅は項目数で割り、左端からの距離で位置を決める -->
 			<li
+				bind:this={pill}
 				class="pill absolute inset-y-1.5 rounded-full bg-accent shadow-clay-pressed"
-				style="--count: {NAV_ITEMS.length}; --index: {currentIndex}"
+				style="--count: {NAV_ITEMS.length}; --index: {currentIndex}; --slide: {SLIDE_MS}ms"
 				aria-hidden="true"
 			></li>
 		{/if}
@@ -63,7 +93,8 @@
 	.pill {
 		width: calc((100% - 0.75rem) / var(--count));
 		left: calc(0.375rem + (100% - 0.75rem) / var(--count) * var(--index));
-		transition: left var(--duration-open) var(--ease-bounce);
+		/* 伸び縮みが中ほどで最大になる。ここで跳ねると動きが二重になる */
+		transition: left var(--slide) ease-in-out;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.pill {
