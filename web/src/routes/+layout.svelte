@@ -9,8 +9,8 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <AppHeader />
-<!-- 下部ナビの分だけ下に余白を足す。最後の中身がナビの裏に隠れないようにする -->
-<div class="pb-28 lg:pb-0">
+<!-- ページ末尾の余白はここで持つ。狭い画面では下部ナビの高さも含める -->
+<div class="pb-28 lg:pb-16">
 	{@render children()}
 </div>
 <BottomNav />

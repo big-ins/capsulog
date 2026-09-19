@@ -239,7 +239,7 @@
 	/>
 </svelte:head>
 
-<main class="mx-auto max-w-2xl px-4 pt-6 pb-16 lg:max-w-5xl lg:pt-24">
+<main class="mx-auto max-w-2xl px-4 pt-6 lg:max-w-5xl lg:pt-24">
 	<PageHeading title="カレンダー" />
 	<!-- 探す手段。囲まずに置く。窪んだ検索欄そのものが一覧との区切りになる -->
 	<div class="relative">
