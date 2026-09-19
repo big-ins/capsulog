@@ -2,6 +2,9 @@
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
+	import Heart from '@lucide/svelte/icons/heart';
+	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import { fold } from '$lib/common/transition';
 	import { authClient } from '$lib/auth/client';
 	import { errorMessage, OFFLINE_MESSAGE, type AuthMode } from '$lib/auth/form';
@@ -43,7 +46,6 @@
 	const COPY = {
 		login: {
 			title: 'ログイン',
-			lead: '',
 			social: 'Google でログイン',
 			submit: 'ログイン',
 			working: '確認しています',
@@ -52,7 +54,6 @@
 		},
 		signup: {
 			title: 'カプセログをはじめる',
-			lead: '登録すると、お気に入りと発売のリマインド、集めたものを飾る棚が使えます。',
 			social: 'Google ではじめる',
 			submit: '登録する',
 			working: '登録しています',
@@ -62,6 +63,13 @@
 	} as const satisfies Record<AuthMode, Record<string, string>>;
 
 	let copy = $derived(COPY[shown]);
+
+	/* 登録すると何ができるか。登録の前にしか見せない */
+	const BENEFITS = [
+		{ icon: Heart, label: 'お気に入り', note: '好きな商品をすぐ見返せる' },
+		{ icon: CalendarClock, label: '発売リマインド', note: 'これから出る商品を買い逃さない' },
+		{ icon: LayoutGrid, label: 'コレクション', note: '集めたものをこのひとつに' }
+	];
 
 	/*
 	 * 切り替えのたびに前のモードのエラーを消す。入れたままの値は残す。
@@ -138,8 +146,11 @@
 
 <div data-hero class="absolute inset-x-0 top-0 -z-10 h-17 bg-accent" aria-hidden="true"></div>
 
-<!-- 画面が広くても伸ばしきらない。入力欄が長いほど視線が横に流れ、読みにくくなる -->
-<main class="mx-auto flex max-w-sm flex-col gap-5 px-4 pt-24 pb-16 sm:max-w-md sm:pt-28">
+<!--
+  入力欄は広げきらない。長いほど視線が横に流れ、読みにくくなる。
+  見出しの上だけは画面の広さを使う。中身が横に並ぶ
+-->
+<main class="mx-auto flex w-full max-w-sm flex-col gap-5 px-4 pt-24 pb-16 sm:max-w-md sm:pt-28">
 	{#if sentTo}
 		<h1 class="px-1 text-title font-extrabold sm:text-site">メールを送りました</h1>
 		<div class="relative overflow-hidden rounded-3xl bg-surface p-5 shadow-clay sm:p-7">
@@ -157,11 +168,33 @@
 		</div>
 	{:else}
 		<div class="flex flex-col px-1">
-			<h1 class="text-title font-extrabold sm:text-site">{copy.title}</h1>
-			{#if copy.lead}
-				<!-- 登録のときだけ増える。急に現れるとカードごと下へずれて見える -->
+			{#if isSignUp}
+				<!-- 登録の前にしか出さない。ログインする人はもう知っている -->
 				<div in:fold={OPEN} out:fold={CLOSE}>
-					<p class="pt-2 text-note leading-relaxed text-faint">{copy.lead}</p>
+					<p class="pb-1.5 text-heading font-extrabold text-accent sm:text-title">
+						あらゆるカプセルトイを、ひとつに。
+					</p>
+				</div>
+			{/if}
+			<h1 class="text-title font-extrabold sm:text-site">{copy.title}</h1>
+			{#if isSignUp}
+				<!-- 3つ横に並べると入力欄の幅では足りない。ここだけ外へ広げる -->
+				<div in:fold={OPEN} out:fold={CLOSE} class="sm:-mx-24 lg:-mx-28">
+					<ul class="flex flex-col gap-3 pt-4 sm:flex-row sm:gap-4">
+						{#each BENEFITS as benefit (benefit.label)}
+							<li class="flex flex-1 items-center gap-3 sm:flex-col sm:gap-2 sm:text-center">
+								<span
+									class="grid h-10 w-10 flex-none place-items-center rounded-full bg-surface text-accent shadow-clay-sm"
+								>
+									<benefit.icon size={18} aria-hidden="true" />
+								</span>
+								<span class="flex flex-col gap-0.5 sm:items-center">
+									<span class="text-note font-extrabold">{benefit.label}</span>
+									<span class="text-note leading-snug text-faint">{benefit.note}</span>
+								</span>
+							</li>
+						{/each}
+					</ul>
 				</div>
 			{/if}
 		</div>
