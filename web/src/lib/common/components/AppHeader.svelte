@@ -4,10 +4,13 @@
 	import { NAV_ITEMS, isCurrent } from '$lib/common/nav';
 </script>
 
-<!-- 中身の幅には合わせない。ロゴとナビの分だけの面を、左に寄せて浮かせる -->
-<header class="fixed inset-x-0 top-0 z-10 px-4 pt-3">
+<!--
+  中身の幅には合わせない。ロゴとナビの分だけの面を、左に寄せて浮かせる。
+  z は中身より上に置く。カードの中にも z-10 があり、同じ値では後から描かれた側が勝つ
+-->
+<header class="fixed inset-x-0 top-0 z-30 px-4 pt-3">
 	<div class="mx-auto max-w-2xl lg:max-w-5xl">
-		<div class="inline-flex items-center gap-6 rounded-full bg-surface px-5 py-2.5 shadow-clay">
+		<div class="floating inline-flex items-center gap-6 rounded-full bg-surface px-5 py-2.5">
 			<a href={resolve('/')} class="text-site font-extrabold text-accent">
 				カプセ<span class="text-ink">ログ</span>
 			</a>
@@ -48,3 +51,15 @@
 		</div>
 	</div>
 </header>
+
+<style>
+	/* クレイの影から外側の白いハイライトだけ抜いたもの。
+	   固定ヘッダの後ろは中身が通るため、白を撒くと下の文字が霞む。
+	   内側の明暗は面の中に収まるので、そのまま残して立体感を保つ */
+	.floating {
+		box-shadow:
+			9px 11px 22px var(--sh),
+			inset 2px 3px 5px var(--hi-in),
+			inset -3px -5px 9px var(--sh-in);
+	}
+</style>
