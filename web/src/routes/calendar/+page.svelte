@@ -6,6 +6,7 @@
 	import * as Popover from '$lib/common/components/ui/popover';
 	import * as Select from '$lib/common/components/ui/select';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import X from '@lucide/svelte/icons/x';
@@ -332,8 +333,8 @@
 
 	<!-- 商品が無い月でも並びは変えられる。出し入れすると月を送るたびにちらつく -->
 	<div class="flex items-center justify-between gap-2 pt-3">
+		<!-- eslint-disable svelte/no-navigation-without-resolve -->
 		{#if browseEntry}
-			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href={browseEntry.href}
 				class="inline-flex items-center gap-1 text-note font-bold text-faint hover:text-accent"
@@ -341,10 +342,17 @@
 				発売時期から探す
 				<ArrowRight size={12} aria-hidden="true" />
 			</a>
-			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{:else}
-			<span></span>
+			<!-- 年の一覧にいるとき。見出しも並びも変わらないので、戻り道はここで示す -->
+			<a
+				href={link('month', null)}
+				class="inline-flex items-center gap-1 text-note font-bold text-faint hover:text-accent"
+			>
+				<ArrowLeft size={12} aria-hidden="true" />
+				今月に戻る
+			</a>
 		{/if}
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		<Select.Root
 			type="single"
 			value={data.activeSort}
