@@ -12,6 +12,7 @@
 		<!-- 行き先は nav.ts で resolve() 済みだが、静的解析では追えない -->
 		{#each NAV_ITEMS as item (item.label)}
 			{@const current = isCurrent(item, page.url.pathname)}
+			{@const Icon = item.icon}
 			<li class="flex-1">
 				{#if item.href}
 					<a
@@ -22,7 +23,7 @@
 						]}
 						aria-current={current ? 'page' : undefined}
 					>
-						<item.icon size={22} aria-hidden="true" />
+						<Icon size={22} aria-hidden="true" />
 						<span class="text-note font-bold">{item.label}</span>
 					</a>
 				{:else}
@@ -31,7 +32,7 @@
 						aria-disabled="true"
 						title="準備中"
 					>
-						<item.icon size={22} aria-hidden="true" />
+						<Icon size={22} aria-hidden="true" />
 						<span class="text-note font-bold">{item.label}</span>
 					</span>
 				{/if}
