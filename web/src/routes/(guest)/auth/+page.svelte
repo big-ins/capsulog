@@ -158,12 +158,11 @@
 			<span class="deco-circle absolute -top-4 -right-4 h-14 w-14 opacity-10" aria-hidden="true"
 			></span>
 			<div class="relative flex flex-col gap-3">
-				<p class="text-body font-bold break-all">{sentTo}</p>
-				<p class="text-note leading-relaxed text-faint">
-					届いたメールのリンクを開くと、登録が完了します。リンクの期限は24時間です。
-				</p>
+				<p class="text-heading font-bold break-all">{sentTo}</p>
+				<p class="text-body leading-relaxed">メールのリンクから、登録を完了できます。</p>
 				<p class="text-note leading-relaxed text-faint">
 					メールが見つからないときは、迷惑メールに振り分けられていないか確かめてください。
+					リンクの期限は24時間です。
 				</p>
 			</div>
 		</div>
@@ -268,13 +267,21 @@
 			</div>
 		</div>
 
-		<button
-			type="button"
-			onclick={() => switchMode(copy.altMode)}
-			class="text-center text-note font-bold text-accent underline"
-		>
-			{copy.alt}
-		</button>
+		<div class="flex flex-col items-center gap-2.5">
+			<button
+				type="button"
+				onclick={() => switchMode(copy.altMode)}
+				class="text-note font-bold text-accent underline"
+			>
+				{copy.alt}
+			</button>
+			{#if !isSignUp}
+				<!-- 登録のときは出さない。まだアカウントが無い -->
+				<a href={resolve('/auth/reset')} class="text-note font-bold text-faint underline">
+					パスワードを忘れた
+				</a>
+			{/if}
+		</div>
 	{/if}
 </main>
 
