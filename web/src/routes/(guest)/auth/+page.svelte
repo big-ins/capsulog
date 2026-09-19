@@ -2,11 +2,9 @@
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
-	import Heart from '@lucide/svelte/icons/heart';
-	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import { fold } from '$lib/common/transition';
 	import { authClient } from '$lib/auth/client';
+	import { BENEFITS } from '$lib/auth/benefits';
 	import { errorMessage, OFFLINE_MESSAGE, type AuthMode } from '$lib/auth/form';
 	import { requestResetSchema, signInSchema, signUpSchema } from '$lib/auth/schemas';
 	import { parseForm, type FieldErrors } from '$lib/common/form';
@@ -87,12 +85,6 @@
 	let isReset = $derived(shown === 'reset');
 
 	/* 登録すると何ができるか。登録の前にしか見せない */
-	const BENEFITS = [
-		{ icon: Heart, label: 'お気に入り', note: '好きな商品をすぐ見返せる' },
-		{ icon: CalendarClock, label: '発売リマインド', note: 'これから出る商品を買い逃さない' },
-		{ icon: LayoutGrid, label: 'コレクション', note: '集めたものをこのひとつに' }
-	];
-
 	/*
 	 * 切り替えのたびに前のモードのエラーを消す。入れたままの値は残す。
 	 * 画面の文言は shown が切り替わったときに一斉に変わる。
