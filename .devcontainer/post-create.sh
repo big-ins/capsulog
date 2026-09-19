@@ -36,6 +36,17 @@ fi
 EOS
 fi
 
+# クラッシュしたプロセスがメモリの写しを吐かないようにする
+MARK_CORE="# コアダンプを残さない"
+if ! grep -qF "$MARK_CORE" "$HOME/.bashrc"; then
+  cat >> "$HOME/.bashrc" <<'EOS'
+
+# コアダンプを残さない。Playwright の Chromium が落ちると
+# 作業中のディレクトリに150MBを超えるファイルが積もる
+ulimit -c 0
+EOS
+fi
+
 # web で作業することが多いため、シェルは web で開く
 MARK_CD="# 開いた直後は web にいる"
 if ! grep -qF "$MARK_CD" "$HOME/.bashrc"; then
