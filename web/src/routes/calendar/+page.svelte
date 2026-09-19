@@ -12,7 +12,6 @@
 	import { shiftYearMonth } from '$lib/calendar/format';
 	import { appendGroups } from '$lib/calendar/list';
 	import FlipText from '$lib/common/components/FlipText.svelte';
-	import FlipNumber from '$lib/common/components/FlipNumber.svelte';
 	import PageHeading from '$lib/common/components/PageHeading.svelte';
 	import EmptyState from '$lib/calendar/components/EmptyState.svelte';
 	import MonthGroup from '$lib/calendar/components/MonthGroup.svelte';
@@ -241,16 +240,9 @@
 
 <main class="mx-auto max-w-2xl px-4 pt-6 pb-16 lg:max-w-5xl lg:pt-24">
 	<PageHeading title="カレンダー" />
+	<!-- 探す手段。囲まずに置く。窪んだ検索欄そのものが一覧との区切りになる -->
 	<div class="relative">
-		<div class="flex flex-wrap gap-2" aria-label="掲載の規模">
-			<span class="rounded-full bg-surface px-3 py-1 text-note font-bold text-faint shadow-clay-sm">
-				今月の新作 <FlipNumber value={data.counts.thisMonth} />件
-			</span>
-			<span class="rounded-full bg-surface px-3 py-1 text-note font-bold text-faint shadow-clay-sm">
-				{data.makers.length}社 <FlipNumber value={data.counts.total} />件を掲載
-			</span>
-		</div>
-		<div class="flex max-w-xl items-center gap-2.5 pt-4">
+		<div class="flex items-center gap-2.5">
 			<form method="GET" action="/calendar" class="flex-1">
 				{#if data.filters.month}<input type="hidden" name="month" value={data.filters.month} />{/if}
 				{#if data.filters.makerCode}<input
@@ -313,30 +305,30 @@
 				</Popover.Content>
 			</Popover.Root>
 		</div>
+
+		{#if applied.length > 0}
+			<div class="flex flex-wrap gap-2 pt-3" aria-label="選択中の条件">
+				{#each applied as chip (chip.label)}
+					<a
+						href={chip.href}
+						class="pressable inline-flex items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-note font-bold text-accent shadow-clay-sm"
+					>
+						{chip.label}
+						<X size={12} aria-hidden="true" />
+					</a>
+				{/each}
+			</div>
+		{/if}
+
+		{#if data.filters.keyword}
+			<p class="pt-3 text-body text-faint">
+				「{data.filters.keyword}」の検索結果 {data.total}件{data.hasMore ? '以上' : ''}
+				<!-- link() は resolve() 起点でクエリを組むが、静的解析では追えない -->
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+				<a href={link('q', null)} class="ml-2 font-bold text-accent">解除</a>
+			</p>
+		{/if}
 	</div>
-
-	{#if applied.length > 0}
-		<div class="flex flex-wrap gap-2 pt-3" aria-label="選択中の条件">
-			{#each applied as chip (chip.label)}
-				<a
-					href={chip.href}
-					class="pressable inline-flex items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-note font-bold text-accent shadow-clay-sm"
-				>
-					{chip.label}
-					<X size={12} aria-hidden="true" />
-				</a>
-			{/each}
-		</div>
-	{/if}
-
-	{#if data.filters.keyword}
-		<p class="pt-3 text-body text-faint">
-			「{data.filters.keyword}」の検索結果 {data.total}件{data.hasMore ? '以上' : ''}
-			<!-- link() は resolve() 起点でクエリを組むが、静的解析では追えない -->
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-			<a href={link('q', null)} class="ml-2 font-bold text-accent">解除</a>
-		</p>
-	{/if}
 
 	<!-- 商品が無い月でも並びは変えられる。出し入れすると月を送るたびにちらつく -->
 	<div class="flex items-center justify-between gap-2 pt-3">
@@ -372,7 +364,7 @@
 	</div>
 
 	<!-- 並び替えを開いている間は触れないようにする。閉じる指が下の商品に届くのを防ぐ -->
-	<div class="pt-5" inert={sortOpen}>
+	<div class="pt-3" inert={sortOpen}>
 		{#if data.years.length > 0}
 			<!-- 過去は 185 ヶ月ある。年を開いて、その年すべてか月かを選ばせる -->
 			<ul class="flex flex-col gap-3">
