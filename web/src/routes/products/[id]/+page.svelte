@@ -138,7 +138,7 @@
 		<!-- eslint-disable svelte/no-navigation-without-resolve -->
 		<!-- resolve() 起点でクエリを足すが、静的解析では追えない -->
 		<a
-			href={back ? `${resolve('/')}?${back}` : resolve('/')}
+			href={back ? `${resolve('/calendar')}?${back}` : resolve('/calendar')}
 			class="pressable pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-surface px-5 py-3 text-body font-extrabold shadow-clay"
 		>
 			<ArrowLeft size={16} aria-hidden="true" />

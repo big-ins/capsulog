@@ -19,7 +19,7 @@
 	 * 詳細のシリーズ欄から辿ったときは、すでに持っている戻り先を引き継ぐ。
 	 */
 	let back = $derived(
-		page.url.pathname === '/'
+		page.url.pathname === '/calendar'
 			? page.url.search.replace(/^\?/, '') || undefined
 			: (page.url.searchParams.get('back') ?? undefined)
 	);
