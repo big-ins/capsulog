@@ -118,7 +118,8 @@
 		try {
 			// 認証の失敗は error に入る。例外で飛ぶのは通信が切れたとき
 			const { error } = isSignUp
-				? await authClient.signUp.email({ ...form, callbackURL: data.redirectTo })
+				? // 確認のリンクを開いた先。ここではまだログインしていない
+					await authClient.signUp.email({ ...form, callbackURL: resolve('/auth/verified') })
 				: await authClient.signIn.email({ email: form.email, password: form.password });
 
 			if (error) {
