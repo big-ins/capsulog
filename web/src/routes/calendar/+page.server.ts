@@ -10,7 +10,8 @@ import {
 	type ListFilters,
 	type Sort
 } from '$lib/calendar/queries.server';
-import type { PageServerLoad } from './$types';
+import { toggleStateAction } from '$lib/calendar/states.server';
+import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	const db = platform?.env.DB;
@@ -96,3 +97,5 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 		activeSort: sort ?? (year ? 'release-desc' : 'release-asc')
 	};
 };
+
+export const actions: Actions = { toggleState: toggleStateAction };

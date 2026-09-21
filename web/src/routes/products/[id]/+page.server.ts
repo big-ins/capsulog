@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { getProduct, listSeriesProducts } from '$lib/calendar/queries.server';
-import type { PageServerLoad } from './$types';
+import { toggleStateAction } from '$lib/calendar/states.server';
+import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ platform, params, locals }) => {
 	const db = platform?.env.DB;
@@ -16,3 +17,5 @@ export const load: PageServerLoad = async ({ platform, params, locals }) => {
 	const series = await listSeriesProducts(db, product, userId);
 	return { product, series };
 };
+
+export const actions: Actions = { toggleState: toggleStateAction };
