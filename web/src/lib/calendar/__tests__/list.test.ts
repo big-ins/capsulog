@@ -13,7 +13,9 @@ function item(name: string): ProductListItem {
 		totalVariants: 5,
 		officialUrl: 'https://example.com',
 		makerCode: 'kitan',
-		makerName: '奇譚クラブ'
+		makerName: '奇譚クラブ',
+		favorited: 0,
+		remind: 0
 	};
 }
 

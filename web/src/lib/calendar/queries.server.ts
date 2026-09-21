@@ -28,6 +28,8 @@ export type ListFilters = {
 	limit?: number;
 	/** 何件目から返すか。続きだけを取るときに使う */
 	offset?: number;
+	/** 見ている人。あればお気に入りとリマインドの状態を混ぜる */
+	userId?: number;
 };
 
 export type Sort = 'release-asc' | 'release-desc' | 'price-asc' | 'price-desc';
@@ -42,16 +44,33 @@ export const PAGE_SIZE = 60;
 /* 読み進められる上限。URL に極端な limit や offset を渡されても、D1 を酷使させない */
 export const MAX_LIMIT = 1200;
 
-const SELECT_ITEM = `
+/*
+ * 商品カードと商品詳細が必要とする列。
+ * ログインしていれば自分の状態を混ぜ、していなければ結合せず 0 を置く。
+ * 列の形は揃えるので、画面はログインの有無で分岐せずに読める。
+ * userId を文字列に埋めず、返した SQL のプレースホルダへ先頭で bind する
+ */
+function selectItem(userId?: number): string {
+	// まだ何も付けていない商品は結合先が無い。COALESCE で 0 に落とす
+	const columns = userId
+		? 'COALESCE(s.favorited, 0) AS favorited, COALESCE(s.remind, 0) AS remind'
+		: '0 AS favorited, 0 AS remind';
+	const join = userId
+		? 'LEFT JOIN user_product_states s ON s.product_id = p.id AND s.user_id = ?'
+		: '';
+	return `
 	SELECT p.id, p.name, p.price,
 	       p.release_year_month AS yearMonth,
 	       p.release_precision  AS precision,
 	       p.release_detail     AS detail,
 	       p.total_variants     AS totalVariants,
 	       p.official_url       AS officialUrl,
-	       m.code AS makerCode, m.name AS makerName
+	       m.code AS makerCode, m.name AS makerName,
+	       ${columns}
 	FROM products p JOIN makers m ON m.id = p.maker_id
+	${join}
 `;
+}
 
 /* 月の中の並び。旬は 上→中→下、週は日付を旬の位置に換算して混ぜる。月までの商品が先頭 */
 const RELEASE_ORDER = `
@@ -129,15 +148,17 @@ export async function listProducts(
 		: // 月をまたぐ向きに月の中も揃える。新しい順なら下旬が先に来る
 			`p.release_year_month ${direction}, ${RELEASE_ORDER} ${direction}, p.name`;
 	// 続きを足していくため、並びが毎回同じでなければならない。同名の商品があるので id で決着させる
-	const sql = `${SELECT_ITEM}
+	const sql = `${selectItem(filters.userId)}
 		${where.length ? 'WHERE ' + where.join(' AND ') : ''}
 		ORDER BY p.release_year_month IS NULL, ${order}, p.id
 		LIMIT ? OFFSET ?`;
 
 	const limit = filters.limit ?? PAGE_SIZE;
+	// userId は JOIN の中にあり、WHERE より前に出る。bind もその順に並べる
+	const leading = filters.userId ? [filters.userId] : [];
 	const { results } = await db
 		.prepare(sql)
-		.bind(...binds, limit + 1, filters.offset ?? 0)
+		.bind(...leading, ...binds, limit + 1, filters.offset ?? 0)
 		.all<ProductListItem>();
 
 	const hasMore = results.length > limit;
@@ -299,25 +320,32 @@ function seriesPrefix(name: string): string | null {
 /** 名前の頭が同じ商品。シリーズの前作・続編を新しい順に返す */
 export async function listSeriesProducts(
 	db: D1Database,
-	product: ProductListItem
+	product: ProductListItem,
+	userId?: number
 ): Promise<ProductListItem[]> {
 	const prefix = seriesPrefix(product.name);
 	if (!prefix) return [];
+	const leading = userId ? [userId] : [];
 	const { results } = await db
 		.prepare(
-			`${SELECT_ITEM} WHERE p.id != ? AND p.name LIKE ? ESCAPE '\\'
+			`${selectItem(userId)} WHERE p.id != ? AND p.name LIKE ? ESCAPE '\\'
 			 ORDER BY p.release_year_month DESC LIMIT 6`
 		)
-		.bind(product.id, `${escapeLike(prefix)}%`)
+		.bind(...leading, product.id, `${escapeLike(prefix)}%`)
 		.all<ProductListItem>();
 	return results;
 }
 
 /** 商品1件と、そのラインナップ */
-export async function getProduct(db: D1Database, id: number): Promise<ProductDetail | null> {
+export async function getProduct(
+	db: D1Database,
+	id: number,
+	userId?: number
+): Promise<ProductDetail | null> {
+	const leading = userId ? [userId] : [];
 	const product = await db
-		.prepare(`${SELECT_ITEM} WHERE p.id = ?`)
-		.bind(id)
+		.prepare(`${selectItem(userId)} WHERE p.id = ?`)
+		.bind(...leading, id)
 		.first<ProductListItem>();
 	if (!product) return null;
 

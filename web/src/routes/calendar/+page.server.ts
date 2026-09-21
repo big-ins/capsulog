@@ -12,9 +12,12 @@ import {
 } from '$lib/calendar/queries.server';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ platform, url }) => {
+export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	const db = platform?.env.DB;
 	if (!db) error(500, 'D1 に接続できない');
+
+	// Better Auth は id を文字列で返す。D1 の列は INTEGER なので戻す
+	const userId = locals.user ? Number(locals.user.id) : undefined;
 
 	const month = url.searchParams.get('month');
 	const makerCode = url.searchParams.get('maker') ?? undefined;
@@ -69,7 +72,8 @@ export const load: PageServerLoad = async ({ platform, url }) => {
 		keyword,
 		sort,
 		limit,
-		offset
+		offset,
+		userId
 	};
 
 	const [makers, list, counts, years] = await Promise.all([

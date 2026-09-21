@@ -14,6 +14,9 @@ export type ProductListItem = {
 	officialUrl: string;
 	makerCode: string;
 	makerName: string;
+	/* ログインしていなければ 0。SQLite の真偽値なので数値で来る */
+	favorited: number;
+	remind: number;
 };
 
 export type YearCount = {
