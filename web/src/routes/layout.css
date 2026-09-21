@@ -13,7 +13,6 @@
 	--accent: #f2766b;
 	--on-accent: #ffffff;
 	--sub: #64bfae;
-	--dot: #efe6db;
 
 	/* クレイの影。地色に依存するためテーマごとに差し替える */
 	--sh: rgba(178, 152, 124, 0.32);
@@ -275,12 +274,7 @@ body {
 	}
 }
 
-/* メンフィスの装飾。置く場所はヘッダ・見出し・カードの隅に限る */
-.deco-dots {
-	background-image: radial-gradient(var(--dot) 1.8px, transparent 1.8px);
-	background-size: 15px 15px;
-}
-/* 円と四角は対角に置く。散らさず、面の角だけに留める */
+/* メンフィスの装飾。置くのはカードの隅だけ。円と四角を対角に、散らさずに留める */
 .deco-circle {
 	background: var(--accent);
 	border-radius: 50%;
