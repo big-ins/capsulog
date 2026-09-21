@@ -39,8 +39,9 @@ sqlite3 で直接開ける。
 | `user_identities` | 認証情報 | ログイン手段。1人が複数持てる |
 | `sessions` | セッション | ログイン中の印 |
 | `auth_tokens` | 確認トークン | メール確認とパスワードリセット |
+| `user_product_states` | 商品への状態 | お気に入りとリマインド。商品ごとに別々に付く |
 
-下の4つは Better Auth が読み書きする。マスタとは分けて考える。
+`users` から `auth_tokens` までの4つは Better Auth が読み書きする。マスタとは分けて考える。
 
 マスタに書き込むのは収集バッチと運営だけ。**ユーザー入力はマスタに入れない。**
 
@@ -253,6 +254,38 @@ Cookie 側は署名され、`httpOnly` と `secure` が付く。
 
 **期限切れの行は溜まる。** `cleanup/` の日次バッチが、期限切れのセッションとトークン、
 確認されないまま24時間を過ぎた仮登録を消す。
+
+## 商品への状態
+
+```sql
+CREATE TABLE user_product_states (
+  id                INTEGER PRIMARY KEY,
+  user_id           INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id        INTEGER REFERENCES products(id) ON DELETE CASCADE,
+  custom_product_id INTEGER,                      -- 自分用の商品
+  favorited         INTEGER NOT NULL DEFAULT 0,   -- 後で見返したい
+  remind            INTEGER NOT NULL DEFAULT 0,   -- 発売を知らせてほしい
+  created_at        TEXT    NOT NULL,
+  updated_at        TEXT    NOT NULL,
+  CHECK ((product_id IS NULL) <> (custom_product_id IS NULL)),
+  CHECK (favorited + remind > 0)
+);
+
+CREATE UNIQUE INDEX idx_states_product        ON user_product_states(user_id, product_id);
+CREATE UNIQUE INDEX idx_states_custom_product ON user_product_states(user_id, custom_product_id);
+```
+
+**お気に入りとリマインドを別々に持つ。**
+発売済みの商品はリマインドしても意味がなく、買ったら終わりの商品を一覧に残す必要もない。
+一方を付けたら他方も付く形にしない。
+
+**両方外れたら行を消す。** CHECK 制約で、意味のない行が残らないようにする。
+
+**UNIQUE インデックスを列ごとに張る。** NULL は UNIQUE の対象外なので、
+`(user_id, product_id, custom_product_id)` の複合では重複を防げない。
+
+**所持の記録はここに持たない。** カプセルトイは全何種のうち何種を持っているかが単位になる。
+商品単位では表せないため、棚とあわせて設計する。
 
 ## フェーズ2以降のテーブル
 
