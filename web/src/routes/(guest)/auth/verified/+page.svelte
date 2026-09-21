@@ -30,10 +30,3 @@
 		</div>
 	</div>
 </main>
-
-<style>
-	.deco-circle {
-		background: var(--accent);
-		border-radius: 50%;
-	}
-</style>

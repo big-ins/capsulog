@@ -102,15 +102,3 @@
 		</div>
 	{/if}
 </main>
-
-<style>
-	/* 隅の装飾。円と四角を対角に置く。散らさず、面の角だけに留める */
-	.deco-circle {
-		background: var(--accent);
-		border-radius: 50%;
-	}
-	.deco-square {
-		background: var(--sub);
-		transform: rotate(24deg);
-	}
-</style>
