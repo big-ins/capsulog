@@ -10,6 +10,7 @@ import {
 	type ListFilters,
 	type Sort
 } from '$lib/calendar/queries.server';
+import { byReleaseState } from '$lib/calendar/list';
 import { setStateAction } from '$lib/calendar/states.server';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -83,6 +84,13 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 		countProducts(db, currentYearMonth(0)),
 		showsYears ? listYearCounts(db, currentYearMonth(0)) : []
 	]);
+	/*
+	 * 既定の今月だけ、発売の状態で並べ直す。
+	 * 並び順を選んだときと、月を指定して見ているときは掛けない。
+	 * 選んだ順序をこちらで崩さない
+	 */
+	const groups = !sort && month === null && !keyword ? byReleaseState(list.groups) : list.groups;
+
 	return {
 		makers,
 		counts,
@@ -91,6 +99,7 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 		offset,
 		nextOffset: offset + limit,
 		...list,
+		groups,
 		thisYearMonth: currentYearMonth(0),
 		// sort は URL で選ばれた値、activeSort は既定を含めて実際に効いている値
 		filters: { month, makerCode, priceBand, keyword, sort },

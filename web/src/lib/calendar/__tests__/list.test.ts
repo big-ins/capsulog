@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { appendGroups } from '../list';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { appendGroups, byReleaseState } from '../list';
 import type { MonthGroup, ProductListItem } from '../types';
 
 function item(name: string): ProductListItem {
@@ -96,5 +96,47 @@ describe('appendGroups', () => {
 		const base = [group('2026-09', ['a'])];
 		appendGroups(base, [group('2026-09', ['b'])]);
 		expect(shape(base)).toEqual([['2026-09', ['a']]]);
+	});
+});
+
+describe('byReleaseState', () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	/** 旬・週を持つ今月の商品 */
+	function dated(name: string, precision: 'period' | 'week', detail: string): ProductListItem {
+		return { ...item(name), precision, detail };
+	}
+
+	// 日本時間 2026-09-24。上旬と中旬は過ぎ、下旬に入っている
+	function freezeToday() {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date('2026-09-24T03:00:00Z'));
+	}
+
+	it('発売中を先頭に、発売済みを最後にする', () => {
+		freezeToday();
+		const items = [
+			dated('上旬', 'period', 'early'),
+			item('月のみ'),
+			dated('下旬', 'period', 'late')
+		];
+		const out = byReleaseState([{ yearMonth: '2026-09', items }]);
+		expect(out[0]?.items.map((row) => row.name)).toEqual(['下旬', '月のみ', '上旬']);
+	});
+
+	it('月までしか分からない商品は発売中の下に置く', () => {
+		freezeToday();
+		const items = [item('月のみ'), dated('09-21週', 'week', '09-21')];
+		const out = byReleaseState([{ yearMonth: '2026-09', items }]);
+		expect(out[0]?.items.map((row) => row.name)).toEqual(['09-21週', '月のみ']);
+	});
+
+	it('状態が同じなら元の並びを保つ', () => {
+		freezeToday();
+		const items = [dated('上旬', 'period', 'early'), dated('中旬', 'period', 'mid')];
+		const out = byReleaseState([{ yearMonth: '2026-09', items }]);
+		expect(out[0]?.items.map((row) => row.name)).toEqual(['上旬', '中旬']);
 	});
 });
