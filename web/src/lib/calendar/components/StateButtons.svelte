@@ -22,11 +22,22 @@
 	 * 画面に出している状態。押した瞬間に切り替え、サーバの往復は待たない。
 	 * $derived にすると、押した直後の代入が load のやり直しで戻ってしまう
 	 */
-	// eslint-disable-next-line svelte/prefer-writable-derived
 	let on = $state({ favorited: !!untrack(() => favorited), remind: !!untrack(() => remind) });
-	/* サーバが持っている値に合わせ直す */
+
+	/*
+	 * まだサーバへ送り終えていない項目。送信中に押された分もここに入る。
+	 * 送るまでに間があり、その間に別の操作の invalidateAll が返ってくることがある。
+	 * 載っている値は、こちらの操作より前のものなので当てにできない
+	 */
+	let pending = $state<Record<string, boolean>>({});
+
+	/* サーバが持っている値に合わせ直す。送信待ちの項目は、こちらの値を優先して残す */
 	$effect(() => {
-		on = { favorited: !!favorited, remind: !!remind };
+		const next = { favorited: !!favorited, remind: !!remind };
+		on = {
+			favorited: pending.favorited ? untrack(() => on.favorited) : next.favorited,
+			remind: pending.remind ? untrack(() => on.remind) : next.remind
+		};
 	});
 
 	let dialogOpen = $state(false);
@@ -86,6 +97,7 @@
 	function toggle(kind: Kind) {
 		if (!on[kind]) burst(kind);
 		on[kind] = !on[kind];
+		pending[kind] = true;
 
 		clearTimeout(timers[kind]);
 		timers[kind] = setTimeout(() => send(kind), SEND_DELAY_MS);
@@ -93,15 +105,22 @@
 
 	/*
 	 * いまの値をサーバへ送る。切り替えではなく値を渡すので、重なっても結果が同じになる。
-	 * 一覧の読み進めた分を保つため、載せ替えは invalidateAll に任せる
+	 * 一覧の読み進めた分を保つため、載せ替えは invalidateAll に任せる。
+	 *
+	 * 送っている間に押されたら、送信待ちの印を降ろさない。
+	 * 降ろすと、返ってきた古い値でその操作が消える
 	 */
 	async function send(kind: Kind) {
+		const sent = on[kind];
+
 		const body = new FormData();
 		body.set('productId', String(productId));
 		body.set('kind', kind);
-		body.set('value', on[kind] ? '1' : '0');
+		body.set('value', sent ? '1' : '0');
 		await fetch('?/setState', { method: 'POST', body });
 		await invalidateAll();
+
+		if (on[kind] === sent) pending[kind] = false;
 	}
 
 	/** 登録していない人にはダイアログで先に何があるかを見せる */
