@@ -78,7 +78,7 @@
 			</div>
 		{/if}
 		<!-- 右端はボタンの居場所。重ねたときに文字が潜らないよう空けておく -->
-		<div class="mt-auto flex gap-3.5 pr-16 text-note font-bold text-faint tabular-nums">
+		<div class="mt-auto flex gap-3.5 pr-24 text-note font-bold text-faint tabular-nums">
 			<span>{item.price === null ? '価格不明' : `¥${item.price}`}</span>
 			{#if item.totalVariants !== null}<span>全{item.totalVariants}種</span>{/if}
 			{#if showYearMonth}
@@ -91,7 +91,7 @@
 
 	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 
-	<div class="absolute right-3 bottom-2.5">
+	<div class="absolute right-1.5 bottom-0.5">
 		<StateButtons productId={item.id} favorited={item.favorited} remind={item.remind} />
 	</div>
 </div>

@@ -34,7 +34,11 @@
 	}
 </script>
 
-<div class="flex items-center gap-1">
+<!--
+  当たり判定はアイコンより広く取る。外すとカードのリンクが反応して詳細へ飛んでしまう。
+  見た目の大きさはアイコンが決め、押せる範囲だけを広げる
+-->
+<div class="flex items-center">
 	{#each BUTTONS as button (button.kind)}
 		{@const Icon = button.icon}
 		{@const active = on[button.kind]}
@@ -54,7 +58,7 @@
 					aria-label={button.label}
 					aria-pressed={active}
 					class={[
-						'pressable-flat grid h-8 w-8 place-items-center rounded-full transition-colors',
+						'pressable-flat grid h-11 w-11 place-items-center rounded-full transition-colors',
 						active ? 'text-accent' : 'text-faint/50'
 					]}
 				>
@@ -66,7 +70,7 @@
 				type="button"
 				aria-label={button.label}
 				onclick={() => askToSignUp(button.label)}
-				class="pressable-flat grid h-8 w-8 place-items-center rounded-full text-faint/50"
+				class="pressable-flat grid h-11 w-11 place-items-center rounded-full text-faint/50"
 			>
 				<Icon size={18} aria-hidden="true" />
 			</button>
