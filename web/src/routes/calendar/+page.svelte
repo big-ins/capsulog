@@ -59,22 +59,18 @@
 	);
 
 	/*
-	 * 発売が近い順は今月を見ているときだけ。月をまたぐ表示では基準が無い。
-	 * 他の4つは発売時期や価格そのもので並べる。近い順だけ今日からの距離で並ぶ
+	 * 指定しないが既定。値で並べる4つとは軸が違うので、並び順の名前を与えない。
+	 * トリガーには「並び替え」とだけ出し、選んだものがあるときだけその名前に変わる
 	 */
 	const SORT_LABELS = {
-		nearness: '発売が近い順',
+		unsorted: '指定しない',
 		'release-desc': '発売が新しい順',
 		'release-asc': '発売が古い順',
 		'price-asc': '価格が安い順',
 		'price-desc': '価格が高い順'
 	} as const;
 	type SortKey = keyof typeof SORT_LABELS;
-	let sortOptions = $derived(
-		(Object.keys(SORT_LABELS) as SortKey[]).filter(
-			(value) => value !== 'nearness' || data.offersNearness
-		)
-	);
+	const SORT_KEYS = Object.keys(SORT_LABELS) as SortKey[];
 
 	let yearLinks = $derived(
 		data.years.map((entry) => ({
@@ -158,9 +154,10 @@
 
 	/** 並び替えを選んだら、その条件で開き直す */
 	function selectSort(value: string) {
+		if (value === data.activeSort) return;
 		// link() は resolve() 起点でクエリを組むが、静的解析では追えない
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		if (value !== data.activeSort) goto(link('sort', value));
+		goto(link('sort', value === 'unsorted' ? null : value));
 	}
 
 	// これから発売の月を選んでいるか。空だったときの案内を変える
@@ -372,10 +369,14 @@
 		>
 			<!-- 選ぶ語で幅が動かないよう、開いたときのパネルと同じ幅に固定する -->
 			<Select.Trigger aria-label="並び替え" class="w-40">
-				<FlipText value={SORT_LABELS[data.activeSort as SortKey]} />
+				<FlipText
+					value={data.activeSort === 'unsorted'
+						? '並び替え'
+						: SORT_LABELS[data.activeSort as SortKey]}
+				/>
 			</Select.Trigger>
 			<Select.Content align="end" sideOffset={8}>
-				{#each sortOptions as value (value)}
+				{#each SORT_KEYS as value (value)}
 					<Select.Item {value} label={SORT_LABELS[value]} />
 				{/each}
 			</Select.Content>

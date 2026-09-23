@@ -18,8 +18,8 @@ export function appendGroups(base: MonthGroup[], incoming: MonthGroup[]): MonthG
 	return merged;
 }
 
-/** 発売が近い順の識別子。URL のクエリにもそのまま載る */
-export const NEARNESS = 'nearness';
+/** 並び順を指定していない状態。選択中の表示に使うだけで、URL には載らない */
+export const UNSORTED = 'unsorted';
 
 /*
  * 発売の近さ。小さいほど上に出る。
