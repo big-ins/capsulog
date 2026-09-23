@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { untrack } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import Bell from '@lucide/svelte/icons/bell';
 	import Heart from '@lucide/svelte/icons/heart';
@@ -17,21 +18,93 @@
 
 	let loggedIn = $derived(!!page.data.user);
 
-	let on = $derived({ favorited: !!favorited, remind: !!remind });
+	/*
+	 * 画面に出している状態。押した瞬間に切り替え、サーバの往復は待たない。
+	 * $derived にすると、押した直後の代入が load のやり直しで戻ってしまう
+	 */
+	// eslint-disable-next-line svelte/prefer-writable-derived
+	let on = $state({ favorited: !!untrack(() => favorited), remind: !!untrack(() => remind) });
+	/* サーバが持っている値に合わせ直す */
+	$effect(() => {
+		on = { favorited: !!favorited, remind: !!remind };
+	});
 
 	let dialogOpen = $state(false);
 	let dialogFeature = $state('');
 
 	/* 付いているときの色。役割ごとに変え、並んでいても見分けられるようにする */
 	const BUTTONS = [
-		{ kind: 'favorited', icon: Heart, label: 'お気に入り', color: 'text-accent' },
-		{ kind: 'remind', icon: Bell, label: '発売リマインド', color: 'text-alert' }
+		{
+			kind: 'favorited',
+			icon: Heart,
+			label: 'お気に入り',
+			color: 'text-accent',
+			ring: 'border-accent'
+		},
+		{
+			kind: 'remind',
+			icon: Bell,
+			label: '発売リマインド',
+			color: 'text-alert',
+			ring: 'border-alert'
+		}
 	] as const;
+
+	type Kind = (typeof BUTTONS)[number]['kind'];
+
+	/* 弾ける輪。項目ごとに持ち、押されたものだけを鳴らす */
+	let rings = $state<Record<string, HTMLElement>>({});
+
+	/*
+	 * 送るまでの待ち時間。この間に押し直されたら、前の予約を取り消して測り直す。
+	 * 連打しても送るのは最後の状態だけになる
+	 */
+	const SEND_DELAY_MS = 400;
+	let timers: Record<string, ReturnType<typeof setTimeout>> = {};
+
+	/** 押されたら見た目を切り替え、少し待ってからその時点の値を送る */
+	function toggle(kind: Kind) {
+		if (!on[kind]) burst(rings[kind]);
+		on[kind] = !on[kind];
+
+		clearTimeout(timers[kind]);
+		timers[kind] = setTimeout(() => send(kind), SEND_DELAY_MS);
+	}
+
+	/*
+	 * いまの値をサーバへ送る。切り替えではなく値を渡すので、重なっても結果が同じになる。
+	 * 一覧の読み進めた分を保つため、載せ替えは invalidateAll に任せる
+	 */
+	async function send(kind: Kind) {
+		const body = new FormData();
+		body.set('productId', String(productId));
+		body.set('kind', kind);
+		body.set('value', on[kind] ? '1' : '0');
+		await fetch('?/setState', { method: 'POST', body });
+		await invalidateAll();
+	}
 
 	/** 登録していない人にはダイアログで先に何があるかを見せる */
 	function askToSignUp(label: string) {
 		dialogFeature = label;
 		dialogOpen = true;
+	}
+
+	/*
+	 * 付けた瞬間に輪が弾ける。外すときは出さない。
+	 * 取り消しは祝う場面ではなく、色が消えることで足りる。
+	 * 線を太いところから細くしながら広げる。塗りつぶすとアイコンを覆ってしまう
+	 */
+	function burst(node?: HTMLElement) {
+		if (!node || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		node.animate(
+			[
+				{ transform: 'scale(0.2)', borderWidth: '14px', opacity: 1 },
+				{ transform: 'scale(1.5)', borderWidth: '2px', opacity: 0.7, offset: 0.5 },
+				{ transform: 'scale(1.9)', borderWidth: '0px', opacity: 0 }
+			],
+			{ duration: 260, easing: 'cubic-bezier(0.2, 0.7, 0.4, 1)' }
+		);
 	}
 </script>
 
@@ -42,48 +115,32 @@
 <div class="flex items-center">
 	{#each BUTTONS as button (button.kind)}
 		{@const Icon = button.icon}
-		{@const active = on[button.kind]}
-		{#if loggedIn}
-			<form
-				method="POST"
-				action="?/toggleState"
-				use:enhance={() =>
-					// 押した分だけを load で取り直す。一覧の読み進めた分は保つ
-					async ({ update }) =>
-						await update({ reset: false, invalidateAll: true })}
+		<button
+			type="button"
+			aria-label={button.label}
+			aria-pressed={loggedIn ? on[button.kind] : undefined}
+			onclick={() => (loggedIn ? toggle(button.kind) : askToSignUp(button.label))}
+			class="pressable-flat grid h-11 w-11 place-items-center"
+		>
+			<span
+				class={[
+					'relative grid h-9 w-9 place-items-center rounded-full bg-surface shadow-clay-sm transition-colors',
+					loggedIn && on[button.kind] ? button.color : 'text-faint'
+				]}
 			>
-				<input type="hidden" name="productId" value={productId} />
-				<input type="hidden" name="kind" value={button.kind} />
-				<button
-					type="submit"
-					aria-label={button.label}
-					aria-pressed={active}
-					class="pressable-flat grid h-11 w-11 place-items-center"
-				>
-					<span
-						class={[
-							'grid h-9 w-9 place-items-center rounded-full bg-surface shadow-clay-sm transition-colors',
-							active ? button.color : 'text-faint'
-						]}
-					>
-						<Icon size={18} fill={active ? 'currentColor' : 'none'} aria-hidden="true" />
-					</span>
-				</button>
-			</form>
-		{:else}
-			<button
-				type="button"
-				aria-label={button.label}
-				onclick={() => askToSignUp(button.label)}
-				class="pressable-flat grid h-11 w-11 place-items-center"
-			>
+				<!-- 弾ける輪。付けた瞬間だけ走らせるので、既定では見えない -->
 				<span
-					class="grid h-9 w-9 place-items-center rounded-full bg-surface text-faint shadow-clay-sm"
-				>
-					<Icon size={18} aria-hidden="true" />
-				</span>
-			</button>
-		{/if}
+					bind:this={rings[button.kind]}
+					class={['absolute inset-0 rounded-full border-0 opacity-0', button.ring]}
+					aria-hidden="true"
+				></span>
+				<Icon
+					size={18}
+					fill={loggedIn && on[button.kind] ? 'currentColor' : 'none'}
+					aria-hidden="true"
+				/>
+			</span>
+		</button>
 	{/each}
 </div>
 

@@ -10,7 +10,7 @@ import {
 	type ListFilters,
 	type Sort
 } from '$lib/calendar/queries.server';
-import { toggleStateAction } from '$lib/calendar/states.server';
+import { setStateAction } from '$lib/calendar/states.server';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ platform, url, locals }) => {
@@ -98,4 +98,4 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	};
 };
 
-export const actions: Actions = { toggleState: toggleStateAction };
+export const actions: Actions = { setState: setStateAction };

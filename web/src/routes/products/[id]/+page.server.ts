@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { getProduct, listSeriesProducts } from '$lib/calendar/queries.server';
-import { toggleStateAction } from '$lib/calendar/states.server';
+import { setStateAction } from '$lib/calendar/states.server';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ platform, params, locals }) => {
@@ -18,4 +18,4 @@ export const load: PageServerLoad = async ({ platform, params, locals }) => {
 	return { product, series };
 };
 
-export const actions: Actions = { toggleState: toggleStateAction };
+export const actions: Actions = { setState: setStateAction };

@@ -10,10 +10,10 @@ function isStateKind(value: unknown): value is StateKind {
 }
 
 /**
- * 状態を切り替える action。押せる画面が複数あるので、ここで1つだけ持つ。
- * 各ページの actions に `{ toggleState: toggleStateAction }` として置く。
+ * 状態を書き換える action。押せる画面が複数あるので、ここで1つだけ持つ。
+ * 各ページの actions に `{ setState: setStateAction }` として置く。
  */
-export async function toggleStateAction(event: RequestEvent) {
+export async function setStateAction(event: RequestEvent) {
 	const db = event.platform?.env.DB;
 	if (!db) error(500, 'D1 に接続できない');
 	// 押せるのは登録した人だけ。画面でも出し分けるが、送られてきた分もここで弾く
@@ -24,22 +24,25 @@ export async function toggleStateAction(event: RequestEvent) {
 	const kind = form.get('kind');
 	if (!Number.isInteger(productId) || !isStateKind(kind)) return fail(400);
 
-	return await toggleState(db, Number(event.locals.user.id), productId, kind);
+	const value = form.get('value') === '1';
+	await setState(db, Number(event.locals.user.id), productId, kind, value);
+	return { ok: true };
 }
 
 /**
- * 状態を切り替える。付いていなければ付け、付いていれば外す。
- * 切り替えた後の値を返す。
+ * 状態を指定の値にする。
  *
+ * 切り替えではなく値を受け取る。連打で送信が重なっても結果が変わらない。
  * 行は必要になったときだけ作り、どちらも外れたら消す。
  * CHECK 制約が両方 0 の行を許さないため、UPDATE で 0 にはできない。
  */
-export async function toggleState(
+export async function setState(
 	db: D1Database,
 	userId: number,
 	productId: number,
-	kind: StateKind
-): Promise<{ favorited: boolean; remind: boolean }> {
+	kind: StateKind,
+	value: boolean
+): Promise<void> {
 	const current = await db
 		.prepare(
 			'SELECT favorited, remind FROM user_product_states WHERE user_id = ? AND product_id = ?'
@@ -48,20 +51,20 @@ export async function toggleState(
 		.first<{ favorited: number; remind: number }>();
 
 	const next = {
-		favorited: kind === 'favorited' ? !current?.favorited : Boolean(current?.favorited),
-		remind: kind === 'remind' ? !current?.remind : Boolean(current?.remind)
+		favorited: kind === 'favorited' ? value : Boolean(current?.favorited),
+		remind: kind === 'remind' ? value : Boolean(current?.remind)
 	};
 
-	const now = new Date().toISOString();
 	if (!next.favorited && !next.remind) {
 		await db
 			.prepare('DELETE FROM user_product_states WHERE user_id = ? AND product_id = ?')
 			.bind(userId, productId)
 			.run();
-		return next;
+		return;
 	}
 
 	// 同じ商品に2行を作らない。UNIQUE インデックスと合わせて upsert する
+	const now = new Date().toISOString();
 	await db
 		.prepare(
 			`INSERT INTO user_product_states
@@ -74,5 +77,4 @@ export async function toggleState(
 		)
 		.bind(userId, productId, Number(next.favorited), Number(next.remind), now, now)
 		.run();
-	return next;
 }
