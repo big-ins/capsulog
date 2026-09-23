@@ -25,6 +25,8 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	const makerCode = url.searchParams.get('maker') ?? undefined;
 	const priceBand = url.searchParams.get('price') ?? undefined;
 	const keyword = url.searchParams.get('q')?.trim() || undefined;
+	// 登録していない人には効かせない。押すと登録へ案内する
+	const favoritedOnly = url.searchParams.get('state') === 'favorited' && Boolean(userId);
 
 	/*
 	 * offset があれば続きだけを返す。画面はそれを今ある一覧の後ろに足す。
@@ -46,7 +48,11 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	const requestedSort = url.searchParams.get('sort');
 	const requested = SORTS.find((value) => value === requestedSort);
 	// 検索は月の絞り込みが外れるため、指定が無いと最古の年から並ぶ。新作を探す動機に合わせる
-	const sort = requested ?? (keyword ? 'release-desc' : undefined);
+	/*
+	 * お気に入りは全期間から集まる。指定が無ければ新しい順にする。
+	 * 発売の状態で並べ直しても、過去の商品が大半を占めて意味を持たない
+	 */
+	const sort = requested ?? (keyword || favoritedOnly ? 'release-desc' : undefined);
 
 	/*
 	 * 並び順を指定していない状態。発売中を先頭に、済んだものを最後へ回す。
@@ -54,14 +60,14 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	 * 旬・週の境目の判定を SQL と TypeScript の両方に持たないため。
 	 * 月をまたぐ表示では今日からの距離に意味がないので、そのときは掛けない
 	 */
-	const unsorted = !requested && month === null && !keyword;
+	const unsorted = !requested && month === null && !keyword && !favoritedOnly;
 
 	// 月の指定がなければ今月。検索時は全期間から探す
 	let yearMonths: string[] = [];
 	let untilYearMonth: string | undefined;
 	let year: string | undefined;
 	// 既定は今月。前後の送りで隣の月へ行けるので、初めから2ヶ月を混ぜる必要がない
-	if (month === null && !keyword) yearMonths = [currentYearMonth(0)];
+	if (month === null && !keyword && !favoritedOnly) yearMonths = [currentYearMonth(0)];
 	// 年は先々月以前の中だけを見せる。年の一覧に出した件数と合わせる
 	else if (month && /^\d{4}$/.test(month)) {
 		year = month;
@@ -70,7 +76,7 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 
 	// 掲載は 200 ヶ月を超える。年を選ばせてから月を見せる
 	// 検索や絞り込みの最中は、絞った結果をそのまま見たいので年の一覧を出さない
-	const showsYears = month === 'browse' && !keyword && !makerCode && !priceBand;
+	const showsYears = month === 'browse' && !keyword && !makerCode && !priceBand && !favoritedOnly;
 
 	const filters: ListFilters = {
 		yearMonths,
@@ -84,7 +90,8 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 		sort,
 		limit,
 		offset,
-		userId
+		userId,
+		favoritedOnly
 	};
 
 	const [makers, list, counts, years] = await Promise.all([
@@ -111,7 +118,7 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 		groups,
 		thisYearMonth: currentYearMonth(0),
 		// sort は URL で選ばれた値、activeSort は既定を含めて実際に効いている値
-		filters: { month, makerCode, priceBand, keyword, sort },
+		filters: { month, makerCode, priceBand, keyword, sort, favoritedOnly },
 		activeSort: unsorted ? UNSORTED : (sort ?? (year ? 'release-desc' : 'release-asc'))
 	};
 };

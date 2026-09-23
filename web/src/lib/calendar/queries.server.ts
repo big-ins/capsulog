@@ -30,6 +30,8 @@ export type ListFilters = {
 	offset?: number;
 	/** 見ている人。あればお気に入りとリマインドの状態を混ぜる */
 	userId?: number;
+	/** お気に入りだけに絞る。userId が無いときは効かない */
+	favoritedOnly?: boolean;
 };
 
 export type Sort = 'release-asc' | 'release-desc' | 'price-asc' | 'price-desc';
@@ -136,6 +138,13 @@ export async function listProducts(
 		binds.push(`%${escapeLike(filters.keyword)}%`);
 	}
 
+	/*
+	 * お気に入りだけに絞る。状態の行は LEFT JOIN で繋いであるので、値を見るだけでよい。
+	 * 総数のクエリは JOIN を持たないため、そちらには別に足す
+	 */
+	const favoritedOnly = Boolean(filters.favoritedOnly && filters.userId);
+	if (favoritedOnly) where.push('s.favorited = 1');
+
 	// 指定が無ければ現在から遠ざかる向き。過去をさかのぼる表示だけ新しい月が先になる
 	const goingBack = Boolean(filters.untilYearMonth || filters.year);
 	const sort: Sort = filters.sort ?? (goingBack ? 'release-desc' : 'release-asc');
@@ -170,14 +179,19 @@ export async function listProducts(
 	 */
 	// 見出しに使う軸で数える。価格順なら価格ごと、そうでなければ月ごと
 	const groupBy = sort.startsWith('price') ? 'p.price' : 'p.release_year_month';
+	// 絞り込みが状態を見るときだけ、数える側にも同じ結合を足す
+	const countJoin = favoritedOnly
+		? 'LEFT JOIN user_product_states s ON s.product_id = p.id AND s.user_id = ?'
+		: '';
 	const { results: totals } = await db
 		.prepare(
 			`SELECT ${groupBy} AS key, count(*) AS count
 			 FROM products p JOIN makers m ON m.id = p.maker_id
+			 ${countJoin}
 			 ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
 			 GROUP BY ${groupBy}`
 		)
-		.bind(...binds)
+		.bind(...(favoritedOnly ? [filters.userId as number] : []), ...binds)
 		.all<{ key: string | number | null; count: number }>();
 	const countOf = new Map(totals.map((row) => [row.key, row.count]));
 

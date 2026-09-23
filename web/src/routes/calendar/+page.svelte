@@ -8,6 +8,7 @@
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Heart from '@lucide/svelte/icons/heart';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import X from '@lucide/svelte/icons/x';
 	import { shiftYearMonth } from '$lib/calendar/format';
@@ -18,12 +19,15 @@
 	import MonthGroup from '$lib/calendar/components/MonthGroup.svelte';
 	import MonthHeading from '$lib/calendar/components/MonthHeading.svelte';
 	import BrowseRow from '$lib/calendar/components/BrowseRow.svelte';
+	import SignUpDialog from '$lib/auth/components/SignUpDialog.svelte';
 	import type { MonthGroup as MonthGroupData } from '$lib/calendar/types';
 
 	let { data } = $props();
 
 	// シートの開閉。同一ルート内の遷移ではコンポーネントが生きるので、条件を選んでも閉じない
 	let filtersOpen = $state(false);
+	// 登録していない人がお気に入りを押したとき、その先に何があるかを見せる
+	let signUpOpen = $state(false);
 	/** 現在の URL から1つのパラメータだけ差し替えたリンクを作る */
 	function link(key: string, value: string | null): string {
 		const params = new SvelteURLSearchParams(page.url.searchParams);
@@ -71,6 +75,29 @@
 	} as const;
 	type SortKey = keyof typeof SORT_LABELS;
 	const SORT_KEYS = Object.keys(SORT_LABELS) as SortKey[];
+
+	let loggedIn = $derived(!!page.data.user);
+
+	/*
+	 * 一覧の対象。すべてに戻すときは state を外し、URL に既定を残さない。
+	 * 月の指定は持ち越さない。お気に入りは全期間から集めるもので、
+	 * 発売月不明を見ている状態から切り替えると、その月に閉じ込められてしまう
+	 */
+	let stateTabs = $derived([
+		{ value: null, label: 'すべて', on: !data.filters.favoritedOnly },
+		{ value: 'favorited', label: 'お気に入り', on: data.filters.favoritedOnly }
+	]);
+
+	/** 対象を切り替えるリンク。月の指定と読み進めた分を落とす */
+	function stateHref(value: string | null): string {
+		const params = new SvelteURLSearchParams(page.url.searchParams);
+		if (value === null) params.delete('state');
+		else params.set('state', value);
+		params.delete('month');
+		params.delete('offset');
+		const query = params.toString();
+		return query ? `?${query}` : resolve('/calendar');
+	}
 
 	let yearLinks = $derived(
 		data.years.map((entry) => ({
@@ -186,6 +213,8 @@
 	 * 「今月・来月」のような範囲では、どちらへ動かすかが決められない。
 	 */
 	let monthSteps = $derived.by(() => {
+		// お気に入りは全期間から集める。月という軸が無いので送り先も無い
+		if (data.filters.favoritedOnly) return null;
 		// 既定は今月を見ている状態。month が無くても送りは出す
 		const month = data.filters.month ?? (data.filters.keyword ? null : data.thisYearMonth);
 		if (!month || !/^\d{4}-\d{2}$/.test(month)) return null;
@@ -208,13 +237,24 @@
 	 */
 	const BROWSE_HREF = '?month=browse';
 	let browseEntry = $derived(
-		data.filters.month === 'browse'
+		data.filters.month === 'browse' || data.filters.favoritedOnly
 			? null
 			: { href: BROWSE_HREF, oldestYear: data.counts.oldestYear }
 	);
 
 	/* 空になった理由ごとに、言うことと次にできることを変える */
 	let empty = $derived.by(() => {
+		/*
+		 * お気に入りが1件も無いときだけ、集め方を案内する。
+		 * 絞り込みや検索で0件になったのは条件の問題で、持っていないわけではない
+		 */
+		if (data.filters.favoritedOnly && !data.filters.keyword && applied.length === 0) {
+			return {
+				title: 'お気に入りはまだありません',
+				hint: '商品のハートを押すと、ここに集まります。',
+				action: { label: 'すべての商品を見る', href: stateHref(null) }
+			};
+		}
 		if (isFutureMonth) {
 			return {
 				title: 'まだ発表されていません',
@@ -233,8 +273,14 @@
 		return {
 			title: 'この条件の商品はありません',
 			hint: '条件を減らすと見つかることがあります。',
+			// お気に入りを見ている最中は、対象は保ったまま条件だけ落とす
 			action:
-				applied.length > 0 ? { label: '条件をすべて外す', href: resolve('/calendar') } : undefined
+				applied.length > 0
+					? {
+							label: '条件をすべて外す',
+							href: data.filters.favoritedOnly ? '?state=favorited' : resolve('/calendar')
+						}
+					: undefined
 		};
 	});
 </script>
@@ -313,6 +359,44 @@
 					{/each}
 				</Popover.Content>
 			</Popover.Root>
+		</div>
+
+		<!--
+	  一覧の対象。絞り込みではなく切り替えなので、シートに入れず常に出す。
+	  登録していない人にも押せる状態で出し、押したら何ができるかを見せる
+	-->
+		<div class="flex gap-2 pt-3" role="group" aria-label="一覧の対象">
+			{#each stateTabs as tab (tab.label)}
+				{#if tab.value === 'favorited' && !loggedIn}
+					<button
+						type="button"
+						onclick={() => (signUpOpen = true)}
+						class="pressable inline-flex items-center gap-1.5 rounded-full bg-ground px-3.5 py-1.5 text-note font-bold text-faint shadow-clay-sm"
+					>
+						<Heart size={13} aria-hidden="true" />
+						{tab.label}
+					</button>
+				{:else}
+					<!-- stateHref() は resolve() 起点でクエリを組むが、静的解析では追えない -->
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
+					<a
+						href={stateHref(tab.value)}
+						aria-current={tab.on ? 'true' : undefined}
+						class={[
+							'pressable inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-note font-bold',
+							tab.on
+								? 'bg-accent text-on-accent shadow-clay-pressed'
+								: 'bg-ground text-faint shadow-clay-sm'
+						]}
+					>
+						{#if tab.value === 'favorited'}
+							<Heart size={13} fill={tab.on ? 'currentColor' : 'none'} aria-hidden="true" />
+						{/if}
+						{tab.label}
+					</a>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
+				{/if}
+			{/each}
 		</div>
 
 		{#if applied.length > 0}
@@ -525,3 +609,5 @@
 		{/if}
 	</div>
 </main>
+
+<SignUpDialog bind:open={signUpOpen} feature="お気に入り" />
