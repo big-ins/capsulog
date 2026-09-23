@@ -56,6 +56,26 @@
 	let rings = $state<Record<string, HTMLElement>>({});
 
 	/*
+	 * 飛び散る粒。8方向へ等間隔に置く。
+	 * 飛距離は揃える。1つおきに変えると、8点が四角の輪郭に並んでしまう。
+	 * ばらつきは大きさで出す
+	 */
+	const SPARKS = Array.from({ length: 8 }, (_, index) => ({
+		angle: `${index * 45}deg`,
+		size: index % 2 === 0 ? '5px' : '3.5px'
+	}));
+
+	/* いま弾けている項目。走り終えたら外し、次に押したときまた掛かるようにする */
+	let bursting = $state<Record<string, boolean>>({});
+
+	/*
+	 * 弾けが終わるまでの長さ。最後の粒の遅れを含める。
+	 * animationend だと粒ごとに8回来るので、時間で一度だけ片付ける
+	 */
+	const BURST_MS = 400;
+	let burstTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+
+	/*
 	 * 送るまでの待ち時間。この間に押し直されたら、前の予約を取り消して測り直す。
 	 * 連打しても送るのは最後の状態だけになる
 	 */
@@ -64,7 +84,7 @@
 
 	/** 押されたら見た目を切り替え、少し待ってからその時点の値を送る */
 	function toggle(kind: Kind) {
-		if (!on[kind]) burst(rings[kind]);
+		if (!on[kind]) burst(kind);
 		on[kind] = !on[kind];
 
 		clearTimeout(timers[kind]);
@@ -91,13 +111,22 @@
 	}
 
 	/*
-	 * 付けた瞬間に輪が弾ける。外すときは出さない。
+	 * 付けた瞬間に弾ける。外すときは出さない。
 	 * 取り消しは祝う場面ではなく、色が消えることで足りる。
-	 * 線を太いところから細くしながら広げる。塗りつぶすとアイコンを覆ってしまう
+	 *
+	 * 輪は線を太いところから細くしながら広げる。塗りつぶすとアイコンを覆ってしまう。
+	 * 跳ねと粒はクラスの付け外しで走らせる。同じ項目を続けて押しても掛け直せるよう、
+	 * 一度外してから次のフレームで付ける
 	 */
-	function burst(node?: HTMLElement) {
-		if (!node || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-		node.animate(
+	function burst(kind: Kind) {
+		if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+		bursting[kind] = false;
+		requestAnimationFrame(() => (bursting[kind] = true));
+		clearTimeout(burstTimers[kind]);
+		burstTimers[kind] = setTimeout(() => (bursting[kind] = false), BURST_MS);
+
+		rings[kind]?.animate(
 			[
 				{ transform: 'scale(0.2)', borderWidth: '14px', opacity: 1 },
 				{ transform: 'scale(1.5)', borderWidth: '2px', opacity: 0.7, offset: 0.5 },
@@ -125,7 +154,8 @@
 			<span
 				class={[
 					'relative grid h-9 w-9 place-items-center rounded-full bg-surface shadow-clay-sm transition-colors',
-					loggedIn && on[button.kind] ? button.color : 'text-faint'
+					loggedIn && on[button.kind] ? button.color : 'text-faint',
+					bursting[button.kind] && 'state-burst'
 				]}
 			>
 				<!-- 弾ける輪。付けた瞬間だけ走らせるので、既定では見えない -->
@@ -134,11 +164,21 @@
 					class={['absolute inset-0 rounded-full border-0 opacity-0', button.ring]}
 					aria-hidden="true"
 				></span>
-				<Icon
-					size={18}
-					fill={loggedIn && on[button.kind] ? 'currentColor' : 'none'}
-					aria-hidden="true"
-				/>
+				<!-- 飛び散る粒。中心に重ねて置き、角度の向きへ飛ばす -->
+				{#each SPARKS as spark, index (spark.angle)}
+					<span
+						class="state-spark"
+						style="--angle: {spark.angle}; --size: {spark.size}; --order: {index}"
+						aria-hidden="true"
+					></span>
+				{/each}
+				<span class={bursting[button.kind] ? 'state-pop' : undefined}>
+					<Icon
+						size={18}
+						fill={loggedIn && on[button.kind] ? 'currentColor' : 'none'}
+						aria-hidden="true"
+					/>
+				</span>
 			</span>
 		</button>
 	{/each}

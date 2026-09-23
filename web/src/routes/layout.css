@@ -205,6 +205,66 @@ body {
 	filter: brightness(0.97);
 }
 
+/* 付けた瞬間の祝い。アイコンが跳ね、輪が広がり、粒が飛ぶ。
+   3つを同時に走らせて、ひとつの弾けに見せる */
+
+/* アイコンは一度沈めてから行き過ぎるまで膨らみ、元へ戻る。
+   先に縮めると、指で押し込んだものが弾け返ったように見える */
+.state-pop {
+	animation: state-pop var(--duration-open) var(--ease-bounce);
+}
+@keyframes state-pop {
+	0% {
+		transform: scale(0.8);
+	}
+	40% {
+		transform: scale(1.25);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+
+/* 飛び散る粒。向きを --angle、大きさを --size で受け取る。
+   translate を回転の後に置き、角度の向きへまっすぐ飛ばす。
+   飛距離は全方向で同じにする。向きごとに変えると、8点が円ではなく四角に並ぶ */
+.state-spark {
+	--distance: -20px;
+	position: absolute;
+	width: var(--size);
+	height: var(--size);
+	border-radius: 9999px;
+	background: currentColor;
+	opacity: 0;
+	transform: rotate(var(--angle)) translateY(0) scale(0);
+}
+.state-burst .state-spark {
+	animation: state-spark var(--duration-open) cubic-bezier(0.2, 0.7, 0.4, 1);
+	/* 粒ごとに出だしをずらす。揃うと輪のように見えて、飛び散らない */
+	animation-delay: calc(var(--order, 0) * 12ms);
+}
+@keyframes state-spark {
+	0% {
+		opacity: 1;
+		transform: rotate(var(--angle)) translateY(0) scale(0.4);
+	}
+	60% {
+		opacity: 1;
+		transform: rotate(var(--angle)) translateY(calc(var(--distance) * 0.8)) scale(1);
+	}
+	100% {
+		opacity: 0;
+		transform: rotate(var(--angle)) translateY(var(--distance)) scale(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.state-pop,
+	.state-burst .state-spark {
+		animation: none;
+	}
+}
+
 /* 折りたたみ。中身の高さを --height で受け取り、そこへ向けて開く。
    max-height だと上限どまりで、曲線が行き過ぎても伸びない。
    height を実寸へ送れば、伸びきる手前で行き過ぎてから戻る。
