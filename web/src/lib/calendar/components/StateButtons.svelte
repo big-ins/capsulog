@@ -22,9 +22,10 @@
 	let dialogOpen = $state(false);
 	let dialogFeature = $state('');
 
+	/* 付いているときの色。役割ごとに変え、並んでいても見分けられるようにする */
 	const BUTTONS = [
-		{ kind: 'favorited', icon: Heart, label: 'お気に入り' },
-		{ kind: 'remind', icon: Bell, label: '発売リマインド' }
+		{ kind: 'favorited', icon: Heart, label: 'お気に入り', color: 'text-accent' },
+		{ kind: 'remind', icon: Bell, label: '発売リマインド', color: 'text-alert' }
 	] as const;
 
 	/** 登録していない人にはダイアログで先に何があるかを見せる */
@@ -61,10 +62,8 @@
 				>
 					<span
 						class={[
-							'grid h-9 w-9 place-items-center rounded-full transition-colors',
-							active
-								? 'bg-accent text-on-accent shadow-clay-pressed'
-								: 'bg-surface text-faint shadow-clay-sm'
+							'grid h-9 w-9 place-items-center rounded-full bg-surface shadow-clay-sm transition-colors',
+							active ? button.color : 'text-faint'
 						]}
 					>
 						<Icon size={18} fill={active ? 'currentColor' : 'none'} aria-hidden="true" />

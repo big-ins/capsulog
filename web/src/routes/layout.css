@@ -13,6 +13,7 @@
 	--accent: #f2766b;
 	--on-accent: #ffffff;
 	--sub: #64bfae;
+	--alert: #e8b34f;
 
 	/* クレイの影。地色に依存するためテーマごとに差し替える */
 	--sh: rgba(178, 152, 124, 0.32);
@@ -40,6 +41,7 @@
 	--color-accent: var(--accent);
 	--color-on-accent: var(--on-accent);
 	--color-sub: var(--sub);
+	--color-alert: var(--alert);
 
 	--shadow-clay:
 		9px 11px 22px var(--sh), -5px -5px 12px var(--hi), inset 2px 3px 5px var(--hi-in),
