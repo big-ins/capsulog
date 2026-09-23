@@ -26,8 +26,9 @@
 		bind:ref
 		data-slot="dialog-content"
 		class={cn(
-			// 画面の中央に浮かせる。端の余白を除いた幅まで縮む
-			'select-pop fixed top-1/2 left-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-3xl bg-surface p-6 text-ink shadow-clay outline-none',
+			// 画面の中央に浮かせる。端の余白を除いた幅まで縮む。
+			// 影は固定して浮かせるもの用。白いハイライトを残すと下の画面に靄が乗る
+			'select-pop fixed top-1/2 left-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-3xl bg-surface p-6 text-ink shadow-clay-fixed outline-none',
 			className
 		)}
 		{...restProps}
