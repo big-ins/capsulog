@@ -134,9 +134,20 @@ describe('canRemind', () => {
 		expect(canRemind('2027-03', 'period', 'late')).toBe(true);
 	});
 
-	it('期間に入っているだけの商品には出す', () => {
+	it('発売中には出さない', () => {
 		freezeToday();
-		expect(canRemind('2026-09', 'period', 'mid')).toBe(true);
+		// 9-15 は中旬の内側
+		expect(canRemind('2026-09', 'period', 'mid')).toBe(false);
+		expect(canRemind('2026-09', 'week', '09-14')).toBe(false);
+	});
+
+	it('今月でもまだ期間に入っていなければ出す', () => {
+		freezeToday();
+		expect(canRemind('2026-09', 'period', 'late')).toBe(true);
+	});
+
+	it('月までしか分からない今月の商品には出す', () => {
+		freezeToday();
 		expect(canRemind('2026-09', 'month', null)).toBe(true);
 	});
 });

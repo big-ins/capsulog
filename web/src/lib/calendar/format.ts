@@ -57,22 +57,6 @@ export function releaseStatus(
 	return jst.getUTCDate() > segmentEndDay(precision, detail) ? '発売済み' : '今月発売';
 }
 
-/**
- * 発売を知らせる余地があるか。
- *
- * 発売済みと発売月不明には出さない。過ぎたものは知らせようがなく、
- * 月が決まらないものはいつ知らせるかも決まらない。
- * 期間に入っているだけの商品は対象に残す。店頭に並ぶのが期間の頭とは限らない
- */
-export function canRemind(
-	yearMonth: string | null,
-	precision: string | null,
-	detail: string | null
-): boolean {
-	if (!yearMonth) return false;
-	return releaseStatus(yearMonth, precision, detail) !== '発売済み';
-}
-
 /* 旬・週が今月の何日目から始まるか。発売の近さの判定に使う */
 function segmentStartDay(precision: string | null, detail: string | null): number {
 	if (precision === 'period' && detail) return { early: 1, mid: 11, late: 21 }[detail] ?? 1;
@@ -103,6 +87,25 @@ export function releaseHighlight(
 	// 期間に入っていれば発売中。手前1週間はまもなく
 	if (today >= start && today <= end) return '発売中';
 	return start - today <= 7 && start > today ? 'まもなく' : null;
+}
+
+/**
+ * 発売を知らせる余地があるか。
+ *
+ * 発売済み・発売中・発売月不明には出さない。
+ * 知らせる先が過ぎているか、いつ知らせるかが決まらない。
+ *
+ * 発売中と分かるのは旬・週が取れる商品だけ。月までしか分からないものは
+ * 月内のいつ出るか断定できないため、その月のうちは対象に残す
+ */
+export function canRemind(
+	yearMonth: string | null,
+	precision: string | null,
+	detail: string | null
+): boolean {
+	if (!yearMonth) return false;
+	if (releaseStatus(yearMonth, precision, detail) === '発売済み') return false;
+	return releaseHighlight(yearMonth, precision, detail) !== '発売中';
 }
 
 /** 今日から offsetMonths ヶ月後の 'YYYY-MM'。日本時間で数える */
