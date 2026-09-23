@@ -76,7 +76,11 @@
 		size: index % 2 === 0 ? '5px' : '3.5px'
 	}));
 
-	/* いま弾けている項目。走り終えたら外し、次に押したときまた掛かるようにする */
+	/*
+	 * いま動かしている項目。走り終えたら外し、次に押したときまた掛かるようにする。
+	 * 跳ねは付け外しの両方で出すが、輪と粒は付けたときだけなので別に持つ
+	 */
+	let popping = $state<Record<string, boolean>>({});
 	let bursting = $state<Record<string, boolean>>({});
 
 	/*
@@ -95,7 +99,7 @@
 
 	/** 押されたら見た目を切り替え、少し待ってからその時点の値を送る */
 	function toggle(kind: Kind) {
-		if (!on[kind]) burst(kind);
+		play(kind, !on[kind]);
 		on[kind] = !on[kind];
 		pending[kind] = true;
 
@@ -130,20 +134,31 @@
 	}
 
 	/*
-	 * 付けた瞬間に弾ける。外すときは出さない。
-	 * 取り消しは祝う場面ではなく、色が消えることで足りる。
+	 * 押した瞬間の動き。アイコンの跳ねは付け外しのどちらでも出す。
+	 * 外すのも操作であり、手応えが要る。
 	 *
+	 * 輪と粒は付けたときだけ。取り消しは祝う場面ではなく、色が消えることで足りる。
 	 * 輪は線を太いところから細くしながら広げる。塗りつぶすとアイコンを覆ってしまう。
-	 * 跳ねと粒はクラスの付け外しで走らせる。同じ項目を続けて押しても掛け直せるよう、
-	 * 一度外してから次のフレームで付ける
+	 *
+	 * クラスは一度外してから次のフレームで付ける。
+	 * 同じ項目を続けて押しても掛け直せるようにするため
 	 */
-	function burst(kind: Kind) {
+	function play(kind: Kind, turningOn: boolean) {
 		if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+		popping[kind] = false;
 		bursting[kind] = false;
-		requestAnimationFrame(() => (bursting[kind] = true));
+		requestAnimationFrame(() => {
+			popping[kind] = true;
+			bursting[kind] = turningOn;
+		});
 		clearTimeout(burstTimers[kind]);
-		burstTimers[kind] = setTimeout(() => (bursting[kind] = false), BURST_MS);
+		burstTimers[kind] = setTimeout(() => {
+			popping[kind] = false;
+			bursting[kind] = false;
+		}, BURST_MS);
+
+		if (!turningOn) return;
 
 		rings[kind]?.animate(
 			[
@@ -192,7 +207,7 @@
 						aria-hidden="true"
 					></span>
 				{/each}
-				<span class={bursting[button.kind] ? 'state-pop' : undefined}>
+				<span class={popping[button.kind] ? 'state-pop' : undefined}>
 					<Icon
 						size={18}
 						fill={loggedIn && on[button.kind] ? 'currentColor' : 'none'}
