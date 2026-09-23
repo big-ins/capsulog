@@ -6,6 +6,7 @@
 	import { formatDetail, formatYearMonth, releaseHighlight } from '../format';
 	import CapsuleBullet from './CapsuleBullet.svelte';
 	import MakerTag from './MakerTag.svelte';
+	import StateButtons from './StateButtons.svelte';
 
 	// showYearMonth は月で切らない並びのとき。見出しに月が出ないため、カードに出す
 	let { item, showYearMonth = false }: { item: ProductListItem; showYearMonth?: boolean } =
@@ -30,62 +31,70 @@
 	let rest = $derived((item.totalVariants ?? 0) - shown);
 </script>
 
-<!-- eslint-disable svelte/no-navigation-without-resolve -->
-<!-- resolve() 起点でクエリを足すが、静的解析では追えない -->
-<a
-	href={back
-		? `${resolve('/products/[id]', { id: String(item.id) })}?back=${encodeURIComponent(back)}`
-		: resolve('/products/[id]', { id: String(item.id) })}
-	class="pressable relative flex h-full flex-col overflow-hidden rounded-3xl bg-surface px-4 py-3.5 shadow-clay"
->
-	<!-- z-0 で背面に送る。バッジと重なる位置にあるため、上に乗ると滲んで見える -->
-	<span class="deco absolute -top-3 -right-3 z-0 h-10 w-10 opacity-15" aria-hidden="true"></span>
-	<!-- メーカーは左、発売時期は右。役割で置き場所を分け、同じ形が隣り合わないようにする -->
-	<div class="relative z-10 flex items-center justify-between gap-2">
-		<MakerTag code={item.makerCode} name={item.makerName} />
-		{#if highlight}
-			<!-- 発売が近いものだけ。全件に付くと強弱にならない -->
-			<span
-				class={[
-					'rounded-full px-2.5 py-1 text-note leading-none font-bold text-on-accent',
-					highlight === '発売中' ? 'bg-accent' : 'bg-sub'
-				]}
-			>
-				{highlight}
-			</span>
-		{/if}
-	</div>
-	<!-- 常に2行分を確保してカードの高さを揃える。1列のときだけ上下中央に置く -->
-	<h3
-		class="mt-2 mb-1.5 min-h-[2lh] content-center text-body leading-relaxed font-bold sm:content-start"
+<!-- ボタンはリンクの中に置けない。重ねて出すため、包んで位置の基準にする -->
+<div class="relative h-full">
+	<!-- eslint-disable svelte/no-navigation-without-resolve -->
+	<!-- resolve() 起点でクエリを足すが、静的解析では追えない -->
+	<a
+		href={back
+			? `${resolve('/products/[id]', { id: String(item.id) })}?back=${encodeURIComponent(back)}`
+			: resolve('/products/[id]', { id: String(item.id) })}
+		class="pressable relative flex h-full flex-col overflow-hidden rounded-3xl bg-surface px-4 py-3.5 shadow-clay"
 	>
-		<span class="line-clamp-2">{item.name}</span>
-	</h3>
-	{#if item.totalVariants !== null}
-		<!-- 全何種をカプセルの数で見せる。数字より一目で量が分かる -->
-		<div
-			class="mt-1.5 mb-2 flex items-end gap-0.5"
-			role="img"
-			aria-label="全{item.totalVariants}種"
-		>
-			{#each { length: shown }, index (index)}
-				<CapsuleBullet color={capsuleColorAt(item.id, index)} />
-			{/each}
-			{#if rest > 0}<span class="ml-1 text-note font-bold text-faint">+{rest}</span>{/if}
+		<!-- z-0 で背面に送る。バッジと重なる位置にあるため、上に乗ると滲んで見える -->
+		<span class="deco absolute -top-3 -right-3 z-0 h-10 w-10 opacity-15" aria-hidden="true"></span>
+		<!-- メーカーは左、発売時期は右。役割で置き場所を分け、同じ形が隣り合わないようにする -->
+		<div class="relative z-10 flex items-center justify-between gap-2">
+			<MakerTag code={item.makerCode} name={item.makerName} />
+			{#if highlight}
+				<!-- 発売が近いものだけ。全件に付くと強弱にならない -->
+				<span
+					class={[
+						'rounded-full px-2.5 py-1 text-note leading-none font-bold text-on-accent',
+						highlight === '発売中' ? 'bg-accent' : 'bg-sub'
+					]}
+				>
+					{highlight}
+				</span>
+			{/if}
 		</div>
-	{/if}
-	<div class="mt-auto flex gap-3.5 text-note font-bold text-faint tabular-nums">
-		<span>{item.price === null ? '価格不明' : `¥${item.price}`}</span>
-		{#if item.totalVariants !== null}<span>全{item.totalVariants}種</span>{/if}
-		{#if showYearMonth}
-			<span>{formatYearMonth(item.yearMonth)}{detail ?? ''}</span>
-		{:else if detail}
-			<span>{detail}</span>
+		<!-- 常に2行分を確保してカードの高さを揃える。1列のときだけ上下中央に置く -->
+		<h3
+			class="mt-2 mb-1.5 min-h-[2lh] content-center text-body leading-relaxed font-bold sm:content-start"
+		>
+			<span class="line-clamp-2">{item.name}</span>
+		</h3>
+		{#if item.totalVariants !== null}
+			<!-- 全何種をカプセルの数で見せる。数字より一目で量が分かる -->
+			<div
+				class="mt-1.5 mb-2 flex items-end gap-0.5"
+				role="img"
+				aria-label="全{item.totalVariants}種"
+			>
+				{#each { length: shown }, index (index)}
+					<CapsuleBullet color={capsuleColorAt(item.id, index)} />
+				{/each}
+				{#if rest > 0}<span class="ml-1 text-note font-bold text-faint">+{rest}</span>{/if}
+			</div>
 		{/if}
-	</div>
-</a>
+		<!-- 右端はボタンの居場所。重ねたときに文字が潜らないよう空けておく -->
+		<div class="mt-auto flex gap-3.5 pr-16 text-note font-bold text-faint tabular-nums">
+			<span>{item.price === null ? '価格不明' : `¥${item.price}`}</span>
+			{#if item.totalVariants !== null}<span>全{item.totalVariants}種</span>{/if}
+			{#if showYearMonth}
+				<span>{formatYearMonth(item.yearMonth)}{detail ?? ''}</span>
+			{:else if detail}
+				<span>{detail}</span>
+			{/if}
+		</div>
+	</a>
 
-<!-- eslint-enable svelte/no-navigation-without-resolve -->
+	<!-- eslint-enable svelte/no-navigation-without-resolve -->
+
+	<div class="absolute right-3 bottom-2.5">
+		<StateButtons productId={item.id} favorited={item.favorited} remind={item.remind} />
+	</div>
+</div>
 
 <style>
 	/* カードの隅の装飾。リストの偶数行は円でなく四角にする */
