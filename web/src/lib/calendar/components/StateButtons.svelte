@@ -158,7 +158,8 @@
 
 <!--
   当たり判定はアイコンより広く取る。外すとカードのリンクが反応して詳細へ飛んでしまう。
-  見た目の大きさはアイコンが決め、押せる範囲だけを広げる
+  見た目の大きさはアイコンが決め、押せる範囲だけを広げる。
+  沈む動きは影を持つ面に付ける。透明な当たり判定を沈めても何も動いて見えない
 -->
 <div class="flex items-center">
 	{#each BUTTONS as button (button.kind)}
@@ -168,11 +169,11 @@
 			aria-label={button.label}
 			aria-pressed={loggedIn ? on[button.kind] : undefined}
 			onclick={() => (loggedIn ? toggle(button.kind) : askToSignUp(button.label))}
-			class="pressable-flat grid h-11 w-11 place-items-center"
+			class="grid h-11 w-11 place-items-center"
 		>
 			<span
 				class={[
-					'relative grid h-9 w-9 place-items-center rounded-full bg-surface shadow-clay-sm transition-colors',
+					'pressable relative grid h-9 w-9 place-items-center rounded-full bg-surface shadow-clay-sm transition-colors',
 					loggedIn && on[button.kind] ? button.color : 'text-faint',
 					bursting[button.kind] && 'state-burst'
 				]}
