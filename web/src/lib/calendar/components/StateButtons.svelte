@@ -9,11 +9,14 @@
 	let {
 		productId,
 		favorited,
-		remind
+		remind,
+		remindable
 	}: {
 		productId: number;
 		favorited: number;
 		remind: number;
+		/* 発売を知らせる余地があるか。発売済みと発売月不明では false になる */
+		remindable: boolean;
 	} = $props();
 
 	let loggedIn = $derived(!!page.data.user);
@@ -62,6 +65,15 @@
 	] as const;
 
 	type Kind = (typeof BUTTONS)[number]['kind'];
+
+	/*
+	 * 発売済みにリマインドは出さない。知らせる先が過ぎている。
+	 * ただし既に付いているものは残す。消すと外す手段がなくなる。
+	 * 発売済みになった分は、リマインドの配信を作るときに日次で落とす
+	 */
+	let shown = $derived(
+		BUTTONS.filter((button) => button.kind !== 'remind' || remindable || on.remind)
+	);
 
 	/* 弾ける輪。項目ごとに持ち、押されたものだけを鳴らす */
 	let rings = $state<Record<string, HTMLElement>>({});
@@ -177,7 +189,7 @@
   沈む動きは影を持つ面に付ける。透明な当たり判定を沈めても何も動いて見えない
 -->
 <div class="flex items-center">
-	{#each BUTTONS as button (button.kind)}
+	{#each shown as button (button.kind)}
 		{@const Icon = button.icon}
 		<button
 			type="button"

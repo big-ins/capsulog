@@ -6,7 +6,8 @@ import {
 	formatRelease,
 	formatYearMonth,
 	releaseHighlight,
-	releaseStatus
+	releaseStatus,
+	canRemind
 } from '../format';
 
 describe('formatYearMonth', () => {
@@ -98,6 +99,45 @@ describe('releaseStatus', () => {
 	it('発売月不明は null', () => {
 		freezeToday();
 		expect(releaseStatus(null, null, null)).toBeNull();
+	});
+});
+
+describe('canRemind', () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	// 日本時間 2026-09-15 に固定する
+	function freezeToday() {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date('2026-09-15T03:00:00Z'));
+	}
+
+	it('発売済みには出さない', () => {
+		freezeToday();
+		expect(canRemind('2026-08', 'month', null)).toBe(false);
+	});
+
+	it('今月でも旬が過ぎていれば出さない', () => {
+		freezeToday();
+		expect(canRemind('2026-09', 'period', 'early')).toBe(false);
+	});
+
+	it('発売月不明には出さない', () => {
+		freezeToday();
+		expect(canRemind(null, null, null)).toBe(false);
+	});
+
+	it('来月以降には出す', () => {
+		freezeToday();
+		expect(canRemind('2026-10', 'month', null)).toBe(true);
+		expect(canRemind('2027-03', 'period', 'late')).toBe(true);
+	});
+
+	it('期間に入っているだけの商品には出す', () => {
+		freezeToday();
+		expect(canRemind('2026-09', 'period', 'mid')).toBe(true);
+		expect(canRemind('2026-09', 'month', null)).toBe(true);
 	});
 });
 

@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import type { ProductListItem } from '../types';
 	import { capsuleColorAt } from '../capsule';
-	import { formatDetail, formatYearMonth, releaseHighlight } from '../format';
+	import { canRemind, formatDetail, formatYearMonth, releaseHighlight } from '../format';
 	import CapsuleBullet from './CapsuleBullet.svelte';
 	import MakerTag from './MakerTag.svelte';
 	import StateButtons from './StateButtons.svelte';
@@ -92,7 +92,12 @@
 	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 
 	<div class="absolute right-1.5 bottom-0.5">
-		<StateButtons productId={item.id} favorited={item.favorited} remind={item.remind} />
+		<StateButtons
+			productId={item.id}
+			favorited={item.favorited}
+			remind={item.remind}
+			remindable={canRemind(item.yearMonth, item.precision, item.detail)}
+		/>
 	</div>
 </div>
 
