@@ -57,12 +57,18 @@
 					type="submit"
 					aria-label={button.label}
 					aria-pressed={active}
-					class={[
-						'pressable-flat grid h-11 w-11 place-items-center rounded-full transition-colors',
-						active ? 'text-accent' : 'text-faint/50'
-					]}
+					class="pressable-flat grid h-11 w-11 place-items-center"
 				>
-					<Icon size={18} fill={active ? 'currentColor' : 'none'} aria-hidden="true" />
+					<span
+						class={[
+							'grid h-9 w-9 place-items-center rounded-full transition-colors',
+							active
+								? 'bg-accent text-on-accent shadow-clay-pressed'
+								: 'bg-surface text-faint shadow-clay-sm'
+						]}
+					>
+						<Icon size={18} fill={active ? 'currentColor' : 'none'} aria-hidden="true" />
+					</span>
 				</button>
 			</form>
 		{:else}
@@ -70,9 +76,13 @@
 				type="button"
 				aria-label={button.label}
 				onclick={() => askToSignUp(button.label)}
-				class="pressable-flat grid h-11 w-11 place-items-center rounded-full text-faint/50"
+				class="pressable-flat grid h-11 w-11 place-items-center"
 			>
-				<Icon size={18} aria-hidden="true" />
+				<span
+					class="grid h-9 w-9 place-items-center rounded-full bg-surface text-faint shadow-clay-sm"
+				>
+					<Icon size={18} aria-hidden="true" />
+				</span>
 			</button>
 		{/if}
 	{/each}
