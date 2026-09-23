@@ -58,12 +58,23 @@
 		}))
 	);
 
+	/*
+	 * 発売が近い順は今月を見ているときだけ。月をまたぐ表示では基準が無い。
+	 * 他の4つは発売時期や価格そのもので並べる。近い順だけ今日からの距離で並ぶ
+	 */
 	const SORT_LABELS = {
+		nearness: '発売が近い順',
 		'release-desc': '発売が新しい順',
 		'release-asc': '発売が古い順',
 		'price-asc': '価格が安い順',
 		'price-desc': '価格が高い順'
 	} as const;
+	type SortKey = keyof typeof SORT_LABELS;
+	let sortOptions = $derived(
+		(Object.keys(SORT_LABELS) as SortKey[]).filter(
+			(value) => value !== 'nearness' || data.offersNearness
+		)
+	);
 
 	let yearLinks = $derived(
 		data.years.map((entry) => ({
@@ -361,11 +372,11 @@
 		>
 			<!-- 選ぶ語で幅が動かないよう、開いたときのパネルと同じ幅に固定する -->
 			<Select.Trigger aria-label="並び替え" class="w-40">
-				<FlipText value={SORT_LABELS[data.activeSort]} />
+				<FlipText value={SORT_LABELS[data.activeSort as SortKey]} />
 			</Select.Trigger>
 			<Select.Content align="end" sideOffset={8}>
-				{#each Object.entries(SORT_LABELS) as [value, label] (value)}
-					<Select.Item {value} {label} />
+				{#each sortOptions as value (value)}
+					<Select.Item {value} label={SORT_LABELS[value]} />
 				{/each}
 			</Select.Content>
 		</Select.Root>

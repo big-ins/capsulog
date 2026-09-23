@@ -10,7 +10,7 @@ import {
 	type ListFilters,
 	type Sort
 } from '$lib/calendar/queries.server';
-import { byReleaseState } from '$lib/calendar/list';
+import { byReleaseNearness, NEARNESS } from '$lib/calendar/list';
 import { setStateAction } from '$lib/calendar/states.server';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -43,9 +43,17 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 			: PAGE_SIZE;
 
 	const SORTS: Sort[] = ['release-asc', 'release-desc', 'price-asc', 'price-desc'];
-	const requested = SORTS.find((value) => value === url.searchParams.get('sort'));
+	const requestedSort = url.searchParams.get('sort');
+	const requested = SORTS.find((value) => value === requestedSort);
 	// 検索は月の絞り込みが外れるため、指定が無いと最古の年から並ぶ。新作を探す動機に合わせる
 	const sort = requested ?? (keyword ? 'release-desc' : undefined);
+
+	/*
+	 * 発売が近い順。SQL の並びではなく、取った後で並べ直す。
+	 * 旬・週の境目の判定を SQL と TypeScript の両方に持たないため。
+	 * 今月を見ているときにしか意味がないので、月をまたぐ表示では選べない
+	 */
+	const nearness = (requestedSort ?? NEARNESS) === NEARNESS && month === null && !keyword;
 
 	// 月の指定がなければ今月。検索時は全期間から探す
 	let yearMonths: string[] = [];
@@ -89,7 +97,7 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	 * 並び順を選んだときと、月を指定して見ているときは掛けない。
 	 * 選んだ順序をこちらで崩さない
 	 */
-	const groups = !sort && month === null && !keyword ? byReleaseState(list.groups) : list.groups;
+	const groups = nearness ? byReleaseNearness(list.groups) : list.groups;
 
 	return {
 		makers,
@@ -103,7 +111,9 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 		thisYearMonth: currentYearMonth(0),
 		// sort は URL で選ばれた値、activeSort は既定を含めて実際に効いている値
 		filters: { month, makerCode, priceBand, keyword, sort },
-		activeSort: sort ?? (year ? 'release-desc' : 'release-asc')
+		// 発売が近い順を選べるか。月をまたぐ表示では意味を持たない
+		offersNearness: month === null && !keyword,
+		activeSort: nearness ? NEARNESS : (sort ?? (year ? 'release-desc' : 'release-asc'))
 	};
 };
 

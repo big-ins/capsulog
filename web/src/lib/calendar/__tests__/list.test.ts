@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { appendGroups, byReleaseState } from '../list';
+import { appendGroups, byReleaseNearness } from '../list';
 import type { MonthGroup, ProductListItem } from '../types';
 
 function item(name: string): ProductListItem {
@@ -99,7 +99,7 @@ describe('appendGroups', () => {
 	});
 });
 
-describe('byReleaseState', () => {
+describe('byReleaseNearness', () => {
 	afterEach(() => {
 		vi.useRealTimers();
 	});
@@ -122,21 +122,41 @@ describe('byReleaseState', () => {
 			item('月のみ'),
 			dated('下旬', 'period', 'late')
 		];
-		const out = byReleaseState([{ yearMonth: '2026-09', items }]);
-		expect(out[0]?.items.map((row) => row.name)).toEqual(['下旬', '月のみ', '上旬']);
+		const out = byReleaseNearness([{ yearMonth: '2026-09', items }]);
+		expect(out[0]?.items.map((row: ProductListItem) => row.name)).toEqual([
+			'下旬',
+			'月のみ',
+			'上旬'
+		]);
 	});
 
 	it('月までしか分からない商品は発売中の下に置く', () => {
 		freezeToday();
 		const items = [item('月のみ'), dated('09-21週', 'week', '09-21')];
-		const out = byReleaseState([{ yearMonth: '2026-09', items }]);
-		expect(out[0]?.items.map((row) => row.name)).toEqual(['09-21週', '月のみ']);
+		const out = byReleaseNearness([{ yearMonth: '2026-09', items }]);
+		expect(out[0]?.items.map((row: ProductListItem) => row.name)).toEqual(['09-21週', '月のみ']);
+	});
+
+	it('まもなくは発売中の次に置く', () => {
+		freezeToday();
+		// 9-24 時点。10-01 週は手前1週間に入る
+		const items = [
+			item('月のみ'),
+			dated('まもなく', 'week', '09-28'),
+			dated('発売中', 'period', 'late')
+		];
+		const out = byReleaseNearness([{ yearMonth: '2026-09', items }]);
+		expect(out[0]?.items.map((row: ProductListItem) => row.name)).toEqual([
+			'発売中',
+			'まもなく',
+			'月のみ'
+		]);
 	});
 
 	it('状態が同じなら元の並びを保つ', () => {
 		freezeToday();
 		const items = [dated('上旬', 'period', 'early'), dated('中旬', 'period', 'mid')];
-		const out = byReleaseState([{ yearMonth: '2026-09', items }]);
-		expect(out[0]?.items.map((row) => row.name)).toEqual(['上旬', '中旬']);
+		const out = byReleaseNearness([{ yearMonth: '2026-09', items }]);
+		expect(out[0]?.items.map((row: ProductListItem) => row.name)).toEqual(['上旬', '中旬']);
 	});
 });
