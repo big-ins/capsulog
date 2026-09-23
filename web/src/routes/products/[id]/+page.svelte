@@ -9,6 +9,7 @@
 	import { capsuleColorAt } from '$lib/calendar/capsule';
 	import MakerTag from '$lib/calendar/components/MakerTag.svelte';
 	import ProductCard from '$lib/calendar/components/ProductCard.svelte';
+	import StateButtons from '$lib/calendar/components/StateButtons.svelte';
 	import SectionHeading from '$lib/common/components/SectionHeading.svelte';
 
 	let { data } = $props();
@@ -53,6 +54,14 @@
 					{status}
 				</span>
 			{/if}
+			<!-- 右端に寄せる。商品名は長くなるので、同じ行には置かない -->
+			<div class="ml-auto">
+				<StateButtons
+					productId={product.id}
+					favorited={product.favorited}
+					remind={product.remind}
+				/>
+			</div>
 		</div>
 		<h1 class="mt-2.5 text-title leading-relaxed font-extrabold text-balance">{product.name}</h1>
 	</div>
