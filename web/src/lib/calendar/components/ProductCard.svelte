@@ -3,7 +3,13 @@
 	import { page } from '$app/state';
 	import type { ProductListItem } from '../types';
 	import { capsuleColorAt } from '../capsule';
-	import { canRemind, formatDetail, formatYearMonth, releaseHighlight } from '../format';
+	import {
+		canRemind,
+		formatDetail,
+		formatYearMonth,
+		releaseHighlight,
+		showsSoldOut
+	} from '../format';
 	import CapsuleBullet from './CapsuleBullet.svelte';
 	import MakerTag from './MakerTag.svelte';
 	import StateButtons from './StateButtons.svelte';
@@ -14,6 +20,7 @@
 
 	let detail = $derived(formatDetail(item.precision, item.detail));
 	let highlight = $derived(releaseHighlight(item.yearMonth, item.precision, item.detail));
+	let soldOut = $derived(showsSoldOut(item.yearMonth, item.precision, item.detail));
 
 	/*
 	 * 戻り先の一覧。絞り込みと並び順はすべてクエリに載っているので、そのまま持たせる。
@@ -55,6 +62,13 @@
 					]}
 				>
 					{highlight}
+				</span>
+			{:else if soldOut}
+				<!-- 済んだことを伝えるだけ。目を引かせない地色にする -->
+				<span
+					class="rounded-full bg-ground px-2.5 py-1 text-note leading-none font-bold text-faint shadow-clay-sm"
+				>
+					発売済み
 				</span>
 			{/if}
 		</div>

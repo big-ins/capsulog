@@ -90,6 +90,24 @@ export function releaseHighlight(
 }
 
 /**
+ * 一覧で発売済みと示すか。今月のものだけ。
+ *
+ * 過去の月は見出しで分かる。全件に付いて強弱が死ぬため出さない。
+ * 今月は旬・週が過ぎたものと、まだのものが混ざる。ここだけは印がないと見分けられない。
+ *
+ * 月までしか分からない商品には出ない。月内のいつ出るか断定できないため、
+ * 印の有無が「発売済み」と「判断できない」の区別を兼ねる
+ */
+export function showsSoldOut(
+	yearMonth: string | null,
+	precision: string | null,
+	detail: string | null
+): boolean {
+	if (yearMonth !== currentYearMonth()) return false;
+	return releaseStatus(yearMonth, precision, detail) === '発売済み';
+}
+
+/**
  * 発売を知らせる余地があるか。
  *
  * 発売済み・発売中・発売月不明には出さない。

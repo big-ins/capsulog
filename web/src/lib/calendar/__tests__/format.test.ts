@@ -7,7 +7,8 @@ import {
 	formatYearMonth,
 	releaseHighlight,
 	releaseStatus,
-	canRemind
+	canRemind,
+	showsSoldOut
 } from '../format';
 
 describe('formatYearMonth', () => {
@@ -99,6 +100,43 @@ describe('releaseStatus', () => {
 	it('発売月不明は null', () => {
 		freezeToday();
 		expect(releaseStatus(null, null, null)).toBeNull();
+	});
+});
+
+describe('showsSoldOut', () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	// 日本時間 2026-09-15 に固定する
+	function freezeToday() {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date('2026-09-15T03:00:00Z'));
+	}
+
+	it('今月で旬が過ぎていれば出す', () => {
+		freezeToday();
+		expect(showsSoldOut('2026-09', 'period', 'early')).toBe(true);
+	});
+
+	it('過去の月には出さない。見出しで分かる', () => {
+		freezeToday();
+		expect(showsSoldOut('2026-08', 'month', null)).toBe(false);
+	});
+
+	it('今月でもまだ発売済みでなければ出さない', () => {
+		freezeToday();
+		expect(showsSoldOut('2026-09', 'period', 'late')).toBe(false);
+	});
+
+	it('月までしか分からない商品には出さない', () => {
+		freezeToday();
+		expect(showsSoldOut('2026-09', 'month', null)).toBe(false);
+	});
+
+	it('発売月不明には出さない', () => {
+		freezeToday();
+		expect(showsSoldOut(null, null, null)).toBe(false);
 	});
 });
 
