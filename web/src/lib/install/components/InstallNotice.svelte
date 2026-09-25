@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Copy from '@lucide/svelte/icons/copy';
 	import Share from '@lucide/svelte/icons/share';
 	import SquarePlus from '@lucide/svelte/icons/square-plus';
 	import * as Dialog from '$lib/common/components/ui/dialog';
@@ -22,15 +23,34 @@
 		else open = true;
 	}
 
+	/*
+	 * 「コピーしました」を出しておく長さ。出したままだと、押し直しても何も変わらず、
+	 * コピーできたのか分からない
+	 */
+	const COPIED_MS = 2000;
+	let copiedTimer: ReturnType<typeof setTimeout> | undefined;
+	// 押した回数。チェックを作り直して、押すたびに跳ねさせる
+	let copies = $state(0);
+
 	/* 書き込めなくても URL は画面に出ている。選んでコピーしてもらえる */
 	async function copyUrl() {
 		try {
 			await navigator.clipboard.writeText(location.origin);
-			copied = true;
 		} catch {
-			copied = false;
+			return;
 		}
+		copied = true;
+		copies++;
+		clearTimeout(copiedTimer);
+		copiedTimer = setTimeout(() => (copied = false), COPIED_MS);
 	}
+
+	/* 閉じたら戻す。次に開いたとき、前のコピーの結果が残って見えないように */
+	$effect(() => {
+		if (open) return;
+		clearTimeout(copiedTimer);
+		copied = false;
+	});
 </script>
 
 <!-- お知らせとして置く。行ごと押せるようにし、ボタンを別に立てない -->
@@ -54,7 +74,8 @@
 			<Dialog.Header>
 				<Dialog.Title>Safari で開いてください</Dialog.Title>
 				<Dialog.Description>
-					iPhone では Safari からしか追加できません。アドレスをコピーして Safari で開いてください。
+					iPhone では Safari からしか追加できません。<br />
+					アドレスをコピーして Safari で開いてください。
 				</Dialog.Description>
 			</Dialog.Header>
 			<div class="flex flex-col gap-3">
@@ -66,9 +87,19 @@
 				<button
 					type="button"
 					onclick={copyUrl}
-					class="pressable rounded-full bg-accent py-3 text-body font-bold text-on-accent shadow-clay-pressed"
+					class="pressable inline-flex items-center justify-center gap-1.5 rounded-full bg-accent py-3 text-body font-bold text-on-accent shadow-clay-pressed"
 				>
-					{copied ? 'コピーしました' : 'アドレスをコピー'}
+					{#if copied}
+						{#key copies}
+							<span class="state-pop inline-flex">
+								<Check size={16} aria-hidden="true" />
+							</span>
+						{/key}
+						コピーしました
+					{:else}
+						<Copy size={16} aria-hidden="true" />
+						アドレスをコピー
+					{/if}
 				</button>
 			</div>
 		{:else}
