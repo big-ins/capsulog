@@ -2,6 +2,7 @@
 /// <reference lib="webworker" />
 
 import { build, files, version } from '$service-worker';
+import { readMessage } from '$lib/push/message';
 
 // 既定の self は Window として解決される。worker の型に絞る
 const worker = self as unknown as ServiceWorkerGlobalScope;
@@ -100,4 +101,45 @@ async function fetchAndKeep(request: Request): Promise<Response> {
 		if (hit) return hit;
 		throw error;
 	}
+}
+
+/*
+ * 届いたら必ず通知を出す。出さないと、ブラウザは代わりの通知を出すか、
+ * 通知を出さないサイトとして購読を止める。本文が読めないときも出す
+ */
+worker.addEventListener('push', (event) => {
+	const message = readMessage(() => event.data?.json());
+	event.waitUntil(
+		worker.registration.showNotification(message.title, {
+			body: message.body,
+			icon: '/icon-192.png',
+			lang: 'ja',
+			data: { url: message.url }
+		})
+	);
+});
+
+/*
+ * タップしたら行き先を開く。カプセログが開いていればそのタブに移る。
+ * 同じアプリが二つ開くと、どちらを見ていたか分からなくなる
+ */
+worker.addEventListener('notificationclick', (event) => {
+	event.notification.close();
+	const url = new URL(event.notification.data?.url ?? '/', location.origin).href;
+	event.waitUntil(openOrFocus(url));
+});
+
+async function openOrFocus(url: string): Promise<void> {
+	const windows = await worker.clients.matchAll({ type: 'window', includeUncontrolled: true });
+	const open = windows.find((client) => new URL(client.url).origin === location.origin);
+	if (open) {
+		try {
+			await open.focus();
+			await open.navigate(url);
+			return;
+		} catch {
+			// 管理下にないタブは移れない。新しく開く
+		}
+	}
+	await worker.clients.openWindow(url);
 }
