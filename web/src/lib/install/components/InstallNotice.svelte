@@ -106,40 +106,47 @@
 			<Dialog.Header>
 				<Dialog.Title>ホーム画面に追加する</Dialog.Title>
 			</Dialog.Header>
-			<ul class="flex flex-col gap-1.5">
-				{#each BENEFITS as benefit (benefit)}
-					<li class="flex items-center gap-2 text-body">
-						<Check size={16} class="flex-none text-accent" aria-hidden="true" />
-						{benefit}
+			<!-- できることと手順は性質が違う。見出しを付け、間を広げて別の塊に見せる -->
+			<section class="flex flex-col gap-2">
+				<h3 class="text-body font-bold text-faint">追加するとできること</h3>
+				<ul class="flex flex-col gap-1.5">
+					{#each BENEFITS as benefit (benefit)}
+						<li class="flex items-center gap-2 text-body">
+							<Check size={16} class="flex-none text-accent" aria-hidden="true" />
+							{benefit}
+						</li>
+					{/each}
+				</ul>
+			</section>
+			<section class="flex flex-col gap-2 pt-2">
+				<h3 class="text-body font-bold text-faint">追加のしかた</h3>
+				<!-- 共有ボタンの位置は Safari の設定で変わる。場所を断定せず、見つからないときの逃げ道を添える -->
+				<ol class="flex flex-col gap-3">
+					<li class="flex items-center gap-3">
+						<span
+							class="grid h-10 w-10 flex-none place-items-center rounded-full bg-ground text-accent shadow-clay-inset"
+						>
+							<Share size={18} aria-hidden="true" />
+						</span>
+						<span class="flex flex-col">
+							<span class="text-body font-bold">共有ボタンを押す</span>
+							<span class="text-note text-faint">見当たらなければ「…」の中にあります</span>
+						</span>
 					</li>
-				{/each}
-			</ul>
-			<!-- 共有ボタンの位置は Safari の設定で変わる。場所を断定せず、見つからないときの逃げ道を添える -->
-			<ol class="flex flex-col gap-3">
-				<li class="flex items-center gap-3">
-					<span
-						class="grid h-10 w-10 flex-none place-items-center rounded-full bg-ground text-accent shadow-clay-inset"
-					>
-						<Share size={18} aria-hidden="true" />
-					</span>
-					<span class="flex flex-col">
-						<span class="text-body font-bold">共有ボタンを押す</span>
-						<span class="text-note text-faint">見当たらなければ「…」の中にあります</span>
-					</span>
-				</li>
-				<li class="flex items-center gap-3">
-					<span
-						class="grid h-10 w-10 flex-none place-items-center rounded-full bg-ground text-accent shadow-clay-inset"
-					>
-						<SquarePlus size={18} aria-hidden="true" />
-					</span>
-					<span class="text-body font-bold">「ホーム画面に追加」を選ぶ</span>
-				</li>
-				<li class="flex items-center gap-3">
-					<img src="/icon.svg" alt="" class="h-10 w-10 flex-none" />
-					<span class="text-body font-bold">ホーム画面のアイコンから開く</span>
-				</li>
-			</ol>
+					<li class="flex items-center gap-3">
+						<span
+							class="grid h-10 w-10 flex-none place-items-center rounded-full bg-ground text-accent shadow-clay-inset"
+						>
+							<SquarePlus size={18} aria-hidden="true" />
+						</span>
+						<span class="text-body font-bold">「ホーム画面に追加」を選ぶ</span>
+					</li>
+					<li class="flex items-center gap-3">
+						<img src="/icon.svg" alt="" class="h-10 w-10 flex-none" />
+						<span class="text-body font-bold">ホーム画面のアイコンから開く</span>
+					</li>
+				</ol>
+			</section>
 		{/if}
 	</Dialog.Content>
 </Dialog.Root>
