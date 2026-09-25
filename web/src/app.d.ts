@@ -22,6 +22,7 @@ declare global {
 				GOOGLE_CLIENT_SECRET: string;
 				RESEND_API_KEY: string;
 				MAIL_FROM: string;
+				VAPID_PUBLIC_KEY: string;
 			};
 		}
 	}

@@ -142,7 +142,31 @@ export const load: PageServerLoad = async ({ locals }) => {
 | `RESEND_API_KEY` | 確認メールとパスワード再設定の送信に使う |
 | `MAIL_FROM` | 差出人。独自ドメインを認証するまでは `onboarding@resend.dev` |
 
+`VAPID_PUBLIC_KEY` は通知の送り主を示す公開鍵で、隠さない。
+本番の値は `wrangler.toml` の `[vars]` に書く。`.dev.vars` に開発用の値を置くと、ローカルではそちらが優先される。
+
 ### 外部サービスの登録
+
+#### 通知の鍵を作る
+
+開発用と本番用で別の組を作る。宛先は作ったときの公開鍵に結び付くため、混ぜると届かない。
+
+```bash
+node -e "
+const { generateKeyPairSync } = require('node:crypto');
+const jwk = generateKeyPairSync('ec', { namedCurve: 'prime256v1' }).privateKey.export({ format: 'jwk' });
+const pub = Buffer.concat([Buffer.from([4]), Buffer.from(jwk.x, 'base64url'), Buffer.from(jwk.y, 'base64url')]);
+console.log('VAPID_PUBLIC_KEY=' + pub.toString('base64url'));
+console.log('VAPID_PRIVATE_KEY=' + jwk.d);
+"
+```
+
+| 値 | 開発 | 本番 |
+|---|---|---|
+| `VAPID_PUBLIC_KEY` | `.dev.vars` | `wrangler.toml` の `[vars]` |
+| `VAPID_PRIVATE_KEY` | `notify/.env` | GitHub の Repository secrets |
+
+秘密鍵は Workers に置かない。送るのは送信バッチだけ。
 
 **どちらもブラウザでの操作が要る。** アカウント作成にメール確認が挟まり、CLI では完結しない。
 
