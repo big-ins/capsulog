@@ -55,7 +55,7 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	const sort = requested ?? (keyword || favoritedOnly ? 'release-desc' : undefined);
 
 	/*
-	 * 並び順を指定していない状態。発売中を先頭に、済んだものを最後へ回す。
+	 * 並び順を指定していない状態。発売期間中を先頭に、済んだものを最後へ回す。
 	 * SQL では並べず、取った後で並べ直す。
 	 * 旬・週の境目の判定を SQL と TypeScript の両方に持たないため。
 	 * 月をまたぐ表示では今日からの距離に意味がないので、そのときは掛けない

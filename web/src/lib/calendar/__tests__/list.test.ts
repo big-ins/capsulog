@@ -115,7 +115,7 @@ describe('byReleaseNearness', () => {
 		vi.setSystemTime(new Date('2026-09-24T03:00:00Z'));
 	}
 
-	it('発売中を先頭に、発売済みを最後にする', () => {
+	it('発売期間中を先頭に、発売済みを最後にする', () => {
 		freezeToday();
 		const items = [
 			dated('上旬', 'period', 'early'),
@@ -130,24 +130,24 @@ describe('byReleaseNearness', () => {
 		]);
 	});
 
-	it('月までしか分からない商品は発売中の下に置く', () => {
+	it('月までしか分からない商品は発売期間中の下に置く', () => {
 		freezeToday();
 		const items = [item('月のみ'), dated('09-21週', 'week', '09-21')];
 		const out = byReleaseNearness([{ yearMonth: '2026-09', items }]);
 		expect(out[0]?.items.map((row: ProductListItem) => row.name)).toEqual(['09-21週', '月のみ']);
 	});
 
-	it('まもなくは発売中の次に置く', () => {
+	it('まもなくは発売期間中の次に置く', () => {
 		freezeToday();
 		// 9-24 時点。10-01 週は手前1週間に入る
 		const items = [
 			item('月のみ'),
 			dated('まもなく', 'week', '09-28'),
-			dated('発売中', 'period', 'late')
+			dated('発売期間中', 'period', 'late')
 		];
 		const out = byReleaseNearness([{ yearMonth: '2026-09', items }]);
 		expect(out[0]?.items.map((row: ProductListItem) => row.name)).toEqual([
-			'発売中',
+			'発売期間中',
 			'まもなく',
 			'月のみ'
 		]);

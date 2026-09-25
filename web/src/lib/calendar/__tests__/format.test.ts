@@ -172,7 +172,7 @@ describe('canRemind', () => {
 		expect(canRemind('2027-03', 'period', 'late')).toBe(true);
 	});
 
-	it('発売中には出さない', () => {
+	it('発売期間中には出さない', () => {
 		freezeToday();
 		// 9-15 は中旬の内側
 		expect(canRemind('2026-09', 'period', 'mid')).toBe(false);
@@ -208,12 +208,12 @@ describe('releaseHighlight', () => {
 		expect(releaseHighlight(null, null, null)).toBeNull();
 	});
 
-	it('期間の中なら発売中', () => {
+	it('期間の中なら発売期間中', () => {
 		freezeToday();
 		// 15日は中旬(11〜20日)の中
-		expect(releaseHighlight('2026-09', 'period', 'mid')).toBe('発売中');
+		expect(releaseHighlight('2026-09', 'period', 'mid')).toBe('発売期間中！');
 		// 9/14週は 14〜20日
-		expect(releaseHighlight('2026-09', 'week', '09-14')).toBe('発売中');
+		expect(releaseHighlight('2026-09', 'week', '09-14')).toBe('発売期間中！');
 	});
 
 	it('月までしか分からないものには出さない', () => {

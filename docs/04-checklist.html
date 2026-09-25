@@ -457,9 +457,9 @@
 
     <div class="group-label">P W A</div>
     <ul>
-      <li><label class="item"><input type="checkbox" data-id="p1-pwa-manifest"><span class="text">manifest とアイコンを用意する</span><span class="note">ホーム画面に置いたときの名前と見た目</span></label></li>
-      <li><label class="item"><input type="checkbox" data-id="p1-pwa-sw"><span class="text">Service Worker を入れる</span><span class="note">通信が切れても直前の一覧は出す</span></label></li>
-      <li><label class="item"><input type="checkbox" data-id="p1-pwa-guide"><span class="text">ホーム画面への追加を案内する</span><span class="note">iOS は手順が知られていない。2回目以降の訪問で出す</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-pwa-manifest" checked><span class="text">manifest とアイコンを用意する</span><span class="note">暦にカプセルを乗せた形。Android 用に maskable を別に持つ</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-pwa-sw" checked><span class="text">Service Worker を入れる</span><span class="note">通信が切れても直前の一覧は出す。フォントと切り抜きの WASM は先に取らない</span></label></li>
+      <li><label class="item"><input type="checkbox" data-id="p1-pwa-guide" checked><span class="text">ホーム画面への追加を案内する</span><span class="note">ホームにお知らせとして置く。iOS は Safari から手で追加してもらう</span></label></li>
     </ul>
 
     <div class="group-label">認 証</div>

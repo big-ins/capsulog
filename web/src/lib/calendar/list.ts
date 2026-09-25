@@ -24,18 +24,18 @@ export const UNSORTED = 'unsorted';
 /*
  * 発売の近さ。小さいほど上に出る。
  * 断定できるものを先に見せ、済んだものを最後にする。
- * 月までしか分からない商品は、発売中かもしれないが断定できないため間に置く
+ * 月までしか分からない商品は、発売期間中かもしれないが断定できないため間に置く
  */
 function releaseRank(item: ProductListItem): number {
 	const highlight = releaseHighlight(item.yearMonth, item.precision, item.detail);
-	if (highlight === '発売中') return 0;
+	if (highlight === '発売期間中！') return 0;
 	if (highlight === 'まもなく') return 1;
 	if (releaseStatus(item.yearMonth, item.precision, item.detail) === '発売済み') return 3;
 	return 2;
 }
 
 /**
- * 発売が近い順に並べ直す。発売中を先頭に、発売済みを最後に回す。
+ * 発売が近い順に並べ直す。発売期間中を先頭に、発売済みを最後に回す。
  *
  * 既定は今月を旬の早い順で出すため、月の半ばでは発売済みが先頭に来る。
  * カレンダーを開くのは次に出るものを見るためで、もう並んでいるものが上にあると逆になる。

@@ -58,7 +58,7 @@
 				<span
 					class={[
 						'rounded-full px-2.5 py-1 text-note leading-none font-bold text-on-accent',
-						highlight === '発売中' ? 'bg-accent' : 'bg-sub'
+						highlight === '発売期間中！' ? 'bg-accent' : 'bg-sub'
 					]}
 				>
 					{highlight}

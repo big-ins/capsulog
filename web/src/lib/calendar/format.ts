@@ -65,7 +65,7 @@ function segmentStartDay(precision: string | null, detail: string | null): numbe
 }
 
 /**
- * 一覧で目を引かせる印。「発売中」「まもなく」だけを返し、そうでなければ null
+ * 一覧で目を引かせる印。「発売期間中」「まもなく」だけを返し、そうでなければ null
  *
  * 月までしか分からない商品には出さない。月内のいつかを断定できず、
  * 出すと今月の全商品に付いて強弱にならない。
@@ -74,7 +74,7 @@ export function releaseHighlight(
 	yearMonth: string | null,
 	precision: string | null,
 	detail: string | null
-): '発売中' | 'まもなく' | null {
+): '発売期間中！' | 'まもなく' | null {
 	if (!yearMonth || !detail) return null;
 	if (precision !== 'period' && precision !== 'week') return null;
 	const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -84,8 +84,8 @@ export function releaseHighlight(
 	const today = jst.getUTCDate();
 	const start = segmentStartDay(precision, detail);
 	const end = segmentEndDay(precision, detail);
-	// 期間に入っていれば発売中。手前1週間はまもなく
-	if (today >= start && today <= end) return '発売中';
+	// 期間に入っていれば発売期間中。手前1週間はまもなく
+	if (today >= start && today <= end) return '発売期間中！';
 	return start - today <= 7 && start > today ? 'まもなく' : null;
 }
 
@@ -110,10 +110,10 @@ export function showsSoldOut(
 /**
  * 発売を知らせる余地があるか。
  *
- * 発売済み・発売中・発売月不明には出さない。
+ * 発売済み・発売期間中・発売月不明には出さない。
  * 知らせる先が過ぎているか、いつ知らせるかが決まらない。
  *
- * 発売中と分かるのは旬・週が取れる商品だけ。月までしか分からないものは
+ * 発売期間中と分かるのは旬・週が取れる商品だけ。月までしか分からないものは
  * 月内のいつ出るか断定できないため、その月のうちは対象に残す
  */
 export function canRemind(
@@ -123,7 +123,7 @@ export function canRemind(
 ): boolean {
 	if (!yearMonth) return false;
 	if (releaseStatus(yearMonth, precision, detail) === '発売済み') return false;
-	return releaseHighlight(yearMonth, precision, detail) !== '発売中';
+	return releaseHighlight(yearMonth, precision, detail) !== '発売期間中！';
 }
 
 /** 今日から offsetMonths ヶ月後の 'YYYY-MM'。日本時間で数える */
