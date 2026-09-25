@@ -45,10 +45,16 @@ export async function setState(
 ): Promise<void> {
 	const current = await db
 		.prepare(
-			'SELECT favorited, remind FROM user_product_states WHERE user_id = ? AND product_id = ?'
+			`SELECT favorited, remind, remind_at, notified_at
+			 FROM user_product_states WHERE user_id = ? AND product_id = ?`
 		)
 		.bind(userId, productId)
-		.first<{ favorited: number; remind: number }>();
+		.first<{
+			favorited: number;
+			remind: number;
+			remind_at: string | null;
+			notified_at: string | null;
+		}>();
 
 	const next = {
 		favorited: kind === 'favorited' ? value : Boolean(current?.favorited),
@@ -63,18 +69,38 @@ export async function setState(
 		return;
 	}
 
-	// 同じ商品に2行を作らない。UNIQUE インデックスと合わせて upsert する
+	/*
+	 * リマインドの時刻は、付いたままなら前の値を残す。
+	 * 同じ値が二重に届いたり、お気に入りだけ切り替えたりしても、付けた時刻は変わらない。
+	 * 変わると、送る相手と代表の商品がずれる
+	 */
 	const now = new Date().toISOString();
+	const kept = Boolean(current?.remind) && next.remind;
+	const remindAt = kept ? (current?.remind_at ?? now) : next.remind ? now : null;
+	const notifiedAt = kept ? (current?.notified_at ?? null) : null;
+
+	// 同じ商品に2行を作らない。UNIQUE インデックスと合わせて upsert する
 	await db
 		.prepare(
 			`INSERT INTO user_product_states
-			   (user_id, product_id, favorited, remind, created_at, updated_at)
-			 VALUES (?, ?, ?, ?, ?, ?)
+			   (user_id, product_id, favorited, remind, remind_at, notified_at, created_at, updated_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 			 ON CONFLICT (user_id, product_id) DO UPDATE SET
 			   favorited = excluded.favorited,
 			   remind = excluded.remind,
+			   remind_at = excluded.remind_at,
+			   notified_at = excluded.notified_at,
 			   updated_at = excluded.updated_at`
 		)
-		.bind(userId, productId, Number(next.favorited), Number(next.remind), now, now)
+		.bind(
+			userId,
+			productId,
+			Number(next.favorited),
+			Number(next.remind),
+			remindAt,
+			notifiedAt,
+			now,
+			now
+		)
 		.run();
 }
