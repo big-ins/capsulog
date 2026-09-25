@@ -40,6 +40,7 @@ sqlite3 で直接開ける。
 | `sessions` | セッション | ログイン中の印 |
 | `auth_tokens` | 確認トークン | メール確認とパスワードリセット |
 | `user_product_states` | 商品への状態 | お気に入りとリマインド。商品ごとに別々に付く |
+| `push_subscriptions` | 通知の宛先 | 通知を許可した端末。1人が複数持てる |
 
 `users` から `auth_tokens` までの4つは Better Auth が読み書きする。マスタとは分けて考える。
 
@@ -267,6 +268,8 @@ CREATE TABLE user_product_states (
   remind            INTEGER NOT NULL DEFAULT 0,   -- 発売を知らせてほしい
   created_at        TEXT    NOT NULL,
   updated_at        TEXT    NOT NULL,
+  remind_at         TEXT,                         -- リマインドを付けた時刻。外すと NULL
+  notified_at       TEXT,                         -- 通知を送った時刻
   CHECK ((product_id IS NULL) <> (custom_product_id IS NULL)),
   CHECK (favorited + remind > 0)
 );
@@ -286,6 +289,38 @@ CREATE UNIQUE INDEX idx_states_custom_product ON user_product_states(user_id, cu
 
 **所持の記録はここに持たない。** カプセルトイは全何種のうち何種を持っているかが単位になる。
 商品単位では表せないため、棚とあわせて設計する。
+
+**リマインドを付けた時刻を `remind_at` に別に持つ。** 通知は、送る日より前に付けたものにだけ送る。
+`created_at` は行を作った時刻で、先にお気に入りを付けていると、リマインドの時刻と区別できない。
+
+**送った時刻を `notified_at` に残す。** 送るのは、発売期間中で、期間の初日より前に付けていて、まだ送っていないもの。
+バッチを再実行しても二重に送らず、送れなかった日の分は翌朝に届く。
+
+## 通知の宛先
+
+```sql
+CREATE TABLE push_subscriptions (
+  id         INTEGER PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint   TEXT    NOT NULL UNIQUE,   -- 宛先の URL。ブラウザが発行する
+  p256dh     TEXT    NOT NULL,          -- 端末の公開鍵
+  auth       TEXT    NOT NULL,          -- 端末が作った乱数
+  created_at TEXT    NOT NULL,
+  updated_at TEXT    NOT NULL
+);
+
+CREATE INDEX idx_push_subscriptions_user ON push_subscriptions(user_id);
+```
+
+**宛先は端末ごとにある。** ユーザーを指定して送る仕組みは無く、許可した端末の宛先に1通ずつ送る。
+
+**本文は端末しか読めない形にして送る。** 途中でブラウザの提供元のサーバを通るため。
+`p256dh` と `auth` はそのための端末の鍵で、端末の秘密鍵は端末から出ない。
+
+**`endpoint` に UNIQUE を付ける。** 同じ端末で別の人がログインし直したら、持ち主を付け替える。
+前の人の通知が次の人の端末に届かないようにする。
+
+**送って 404 か 410 が返った宛先は消す。** 購読が切れている。
 
 ## フェーズ2以降のテーブル
 
