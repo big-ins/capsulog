@@ -2,8 +2,12 @@
 	import './layout.css';
 	import AppHeader from '$lib/common/components/AppHeader.svelte';
 	import BottomNav from '$lib/common/components/BottomNav.svelte';
+	import { install } from '$lib/install/install.svelte';
 
 	let { children } = $props();
+
+	// どの画面から開いても受け取れるように、ここで待ち始める
+	$effect(() => install.listen());
 </script>
 
 <AppHeader />
