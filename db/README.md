@@ -178,7 +178,6 @@ CREATE TABLE users (
   createdAt          DATE    NOT NULL,
   updatedAt          DATE    NOT NULL,
   xHandle            TEXT,               -- X のユーザー名。@ は含めない
-  icalToken          TEXT,               -- 購読 URL に載せる。漏れたら再発行する
   agreedTermsVersion TEXT,               -- 同意した規約の版
   deletedAt          DATE                -- 退会時刻。弾くのはアプリ側
 );
@@ -228,7 +227,7 @@ CREATE INDEX auth_tokens_identifier_idx ON auth_tokens(identifier);
 `better-auth generate` で出た SQL を新しいマイグレーションにする。
 手で列を足すと、Better Auth が知らない列になる。
 
-**独自の列は4つ。** `xHandle` `icalToken` `agreedTermsVersion` `deletedAt`。
+**独自の列は3つ。** `xHandle` `agreedTermsVersion` `deletedAt`。
 Better Auth はこれらを読み書きするだけで、意味は解釈しない。
 
 **ログイン手段を `user_identities` に分けて持つ。**
