@@ -1,0 +1,32 @@
+# 発売リマインドの通知。毎朝8時(JST)に本番の D1 を読んで送る。
+# 実行には リポジトリの secret CLOUDFLARE_API_TOKEN と VAPID_PRIVATE_KEY が要る。
+name: notify
+
+on:
+  schedule:
+    - cron: "0 23 * * *" # 08:00 JST。収集の後に回し、新しい発売時期で判定する
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "送る内容を出すだけで送らない"
+        type: boolean
+        default: false
+
+# 前の実行が残っていたら重ねない。重なると同じ人に二重に送りうる
+concurrency:
+  group: notify
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: 送信
+        run: uv run --no-dev notify/main.py ${{ inputs.dry-run == true && '--dry-run' || '' }}
+        env:
+          D1_TARGET: remote
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
