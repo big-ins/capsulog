@@ -3,7 +3,9 @@ name = "capsulog"
 version = "0.1.0"
 description = "カプセログ - メーカー横断のカプセルトイ発売カレンダー"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "cryptography>=50.0.1",
+]
 
 [tool.ruff]
 line-length = 100
