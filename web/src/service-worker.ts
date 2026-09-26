@@ -2,6 +2,7 @@
 /// <reference lib="webworker" />
 
 import { build, files, version } from '$service-worker';
+import { keepsPage, pageCacheName } from '$lib/common/offline';
 import { readMessage } from '$lib/push/message';
 
 // 既定の self は Window として解決される。worker の型に絞る
@@ -12,6 +13,9 @@ const worker = self as unknown as ServiceWorkerGlobalScope;
  * build は JS と CSS、files は static の中身
  */
 const CACHE = `capsulog-${version}`;
+
+/* 画面の控えは別の入れ物に入れる。ログインした人の情報が入るので、ページが丸ごと捨てる */
+const PAGES = pageCacheName(version);
 
 /*
  * 名前に版が入り、中身が変わらないもの。一度取れば以後は取りに行かない。
@@ -43,7 +47,9 @@ worker.addEventListener('activate', (event) => {
 		caches
 			.keys()
 			.then((keys) =>
-				Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
+				Promise.all(
+					keys.filter((key) => key !== CACHE && key !== PAGES).map((key) => caches.delete(key))
+				)
 			)
 			// 開いているページを新しい worker の管理下へ移す
 			.then(() => worker.clients.claim())
@@ -51,11 +57,12 @@ worker.addEventListener('activate', (event) => {
 });
 
 /*
- * 取り方を2つに分ける。
+ * 取り方を分ける。
  *
  * ビルド成果物はファイル名に版が入るので、キャッシュを先に見てよい。
- * 画面のデータは毎回取りに行き、繋がらないときだけ前回の応答を返す。
- * こちらでキャッシュを先に見ると、発売情報が古いまま出る
+ * 商品を探す画面は毎回取りに行き、繋がらないときだけ前回の応答を返す。
+ * こちらでキャッシュを先に見ると、発売情報が古いまま出る。
+ * それ以外は触らない。ログインの行き来やマイページを控えから出すと、別の人の画面が出うる
  */
 worker.addEventListener('fetch', (event) => {
 	const { request } = event;
@@ -70,7 +77,7 @@ worker.addEventListener('fetch', (event) => {
 		return;
 	}
 
-	event.respondWith(fetchAndKeep(request));
+	if (keepsPage(url.pathname)) event.respondWith(fetchAndKeep(request));
 });
 
 /** キャッシュにあればそれを返す。無ければ取りに行き、控えてから返す */
@@ -92,12 +99,12 @@ async function fetchAndKeep(request: Request): Promise<Response> {
 		const response = await fetch(request);
 		// 206 などの部分応答は Cache API が受け取らない
 		if (response.status === 200) {
-			const cache = await caches.open(CACHE);
+			const cache = await caches.open(PAGES);
 			cache.put(request, response.clone());
 		}
 		return response;
 	} catch (error) {
-		const hit = await caches.match(request);
+		const hit = await caches.match(request, { cacheName: PAGES });
 		if (hit) return hit;
 		throw error;
 	}

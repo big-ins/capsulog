@@ -3,6 +3,7 @@
 	import AppHeader from '$lib/common/components/AppHeader.svelte';
 	import BottomNav from '$lib/common/components/BottomNav.svelte';
 	import { page } from '$app/state';
+	import { clearPageCache } from '$lib/common/offline';
 	import { install } from '$lib/install/install.svelte';
 	import { push } from '$lib/push/push.svelte';
 
@@ -19,6 +20,16 @@
 	let userId = $derived(page.data.user?.id ?? null);
 	$effect(() => {
 		push.sync(userId !== null).catch(() => {});
+	});
+
+	/*
+	 * ログインしている人が変わったら、画面の控えを捨てる。ログアウトもここに入る。
+	 * 控えた画面には前の人の情報が入っている。開いた直後は変わったのではないので捨てない
+	 */
+	let seenUserId: string | null | undefined;
+	$effect(() => {
+		if (seenUserId !== undefined && seenUserId !== userId) clearPageCache().catch(() => {});
+		seenUserId = userId;
 	});
 </script>
 
