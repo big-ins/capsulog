@@ -9,10 +9,10 @@
 	let { data } = $props();
 
 	/*
-	 * ホーム画面から開き、通知をまだ聞いていないときだけ出す。
-	 * ブラウザのままの人には、リマインドを押したときに聞く
+	 * 通知をまだ聞いていない間は、開くたびに出す。リマインドを押したときには聞かない。
+	 * iPhone で追加していなければ通知は使えない状態になり、ここには出ない
 	 */
-	let asksPush = $derived(install.standalone && push.status === 'default');
+	let asksPush = $derived(push.status === 'default' && !!data.vapidPublicKey);
 </script>
 
 <svelte:head><title>カプセログ</title></svelte:head>
@@ -24,14 +24,15 @@
 		{data.makerCount}社 {data.productCount.toLocaleString('ja-JP')}件のカプセルトイを掲載中！
 	</p>
 
-	<!-- 追加済みか、案内しようがない環境では出さない。追加した後は同じ場所で通知を聞く -->
-	{#if install.kind}
-		<div class="pt-4">
-			<InstallNotice />
-		</div>
-	{:else if asksPush && data.vapidPublicKey}
-		<div class="pt-4">
-			<PushNotice publicKey={data.vapidPublicKey} />
+	<!-- お知らせ。当てはまるものを並べる。Android と PC は追加と通知の両方が出ることがある -->
+	{#if install.kind || asksPush}
+		<div class="flex flex-col gap-2 pt-4">
+			{#if install.kind}
+				<InstallNotice />
+			{/if}
+			{#if asksPush && data.vapidPublicKey}
+				<PushNotice publicKey={data.vapidPublicKey} />
+			{/if}
 		</div>
 	{/if}
 

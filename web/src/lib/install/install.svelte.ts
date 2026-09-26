@@ -16,9 +16,6 @@ class InstallState {
 		return installKind({ ...this.#device, canPrompt: this.#deferred !== null });
 	});
 
-	/** ホーム画面から開いているか。受け取り始める前は false */
-	standalone = $derived(this.#device?.standalone ?? false);
-
 	/**
 	 * ブラウザからの知らせを受け取り始める。止めるための関数を返す。
 	 * インストール画面を呼ぶためのイベントは、ページを開いてすぐ届く。
