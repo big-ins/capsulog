@@ -37,6 +37,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv run --group dev ruff check .
       - run: uv run --group dev ruff format --check .
+      # 暗号化の組み立てが崩れると、本番で届かなくなるまで気づけない
+      - run: uv run python -m unittest discover -s notify
 
   deploy:
     needs: [web, batch]
