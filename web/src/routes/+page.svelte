@@ -3,8 +3,16 @@
 	import PageHeading from '$lib/common/components/PageHeading.svelte';
 	import InstallNotice from '$lib/install/components/InstallNotice.svelte';
 	import { install } from '$lib/install/install.svelte';
+	import PushNotice from '$lib/push/components/PushNotice.svelte';
+	import { push } from '$lib/push/push.svelte';
 
 	let { data } = $props();
+
+	/*
+	 * ホーム画面から開き、通知をまだ聞いていないときだけ出す。
+	 * ブラウザのままの人には、リマインドを押したときに聞く
+	 */
+	let asksPush = $derived(install.standalone && push.status === 'default');
 </script>
 
 <svelte:head><title>カプセログ</title></svelte:head>
@@ -16,10 +24,14 @@
 		{data.makerCount}社 {data.productCount.toLocaleString('ja-JP')}件のカプセルトイを掲載中！
 	</p>
 
-	<!-- 追加済みか、案内しようがない環境では出さない -->
+	<!-- 追加済みか、案内しようがない環境では出さない。追加した後は同じ場所で通知を聞く -->
 	{#if install.kind}
 		<div class="pt-4">
 			<InstallNotice />
+		</div>
+	{:else if asksPush && data.vapidPublicKey}
+		<div class="pt-4">
+			<PushNotice publicKey={data.vapidPublicKey} />
 		</div>
 	{/if}
 

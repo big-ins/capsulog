@@ -16,6 +16,9 @@ class InstallState {
 		return installKind({ ...this.#device, canPrompt: this.#deferred !== null });
 	});
 
+	/** ホーム画面から開いているか。受け取り始める前は false */
+	standalone = $derived(this.#device?.standalone ?? false);
+
 	/**
 	 * ブラウザからの知らせを受け取り始める。止めるための関数を返す。
 	 * インストール画面を呼ぶためのイベントは、ページを開いてすぐ届く。
@@ -33,17 +36,27 @@ class InstallState {
 			event.preventDefault();
 			this.#deferred = event as BeforeInstallPromptEvent;
 		};
-		// 追加しても、いま開いているタブはブラウザのまま。案内だけ消す
+		// 追加したら案内を消す。タブがブラウザに残る端末でも、もう追加は要らない
 		const done = () => {
 			this.#deferred = null;
 			this.#installed = true;
 		};
+		/*
+		 * Chrome は追加したとき、読み込み直さずにタブをアプリのウィンドウへ移す。
+		 * 開いたときに読んだ値のままだと、移った後もブラウザのタブとして扱ってしまう
+		 */
+		const media = matchMedia('(display-mode: standalone)');
+		const moved = () => {
+			if (this.#device) this.#device = { ...this.#device, standalone: isStandalone() };
+		};
 
 		addEventListener('beforeinstallprompt', keep);
 		addEventListener('appinstalled', done);
+		media.addEventListener('change', moved);
 		return () => {
 			removeEventListener('beforeinstallprompt', keep);
 			removeEventListener('appinstalled', done);
+			media.removeEventListener('change', moved);
 		};
 	}
 
