@@ -5,9 +5,13 @@ compatibility_flags = ["nodejs_compat"]
 
 assets = { directory = ".svelte-kit/cloudflare", binding = "ASSETS" }
 
-# 通知を許可するときブラウザに渡す。公開鍵なので隠さない。
-# ローカルは .dev.vars の開発用の鍵が優先される
+# 秘密でない本番の値。ローカルは .dev.vars の値が優先される。
+# ダッシュボードで Text の変数を足すと、デプロイのたびにここの内容で置き直されて消える
 [vars]
+BETTER_AUTH_URL = "https://capsulog.capsulog.workers.dev"
+# 独自ドメインを認証するまでは、Resend に登録したアドレスにしか届かない
+MAIL_FROM = "onboarding@resend.dev"
+# 通知を許可するときブラウザに渡す。公開鍵なので隠さない
 VAPID_PUBLIC_KEY = "BCuSLFDsz8jGsvvnehrreugY-8sXjPYmE7RUykGRYkD4ZZYkYP-J040QQLqnOalCH20KWKSR09z3xzJ7rTvdFwM"
 
 [[d1_databases]]

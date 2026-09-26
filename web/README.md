@@ -134,19 +134,21 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 ### 秘匿値
 
-`.dev.vars` に置く。コミットしない。本番は `wrangler secret put` で入れる。
+ローカルはすべて `.dev.vars` に置く。コミットしない。
+本番は、秘密の値を Secret で入れ、秘密でない値を `wrangler.toml` の `[vars]` に書く。
 
-| 名前 | 中身 |
-|---|---|
-| `BETTER_AUTH_SECRET` | Cookie の署名に使う。十分に長い乱数 |
-| `BETTER_AUTH_URL` | サイトの URL |
-| `GOOGLE_CLIENT_ID` | Google Cloud Console で作る |
-| `GOOGLE_CLIENT_SECRET` | 同上 |
-| `RESEND_API_KEY` | 確認メールとパスワード再設定の送信に使う |
-| `MAIL_FROM` | 差出人。独自ドメインを認証するまでは `onboarding@resend.dev` |
+| 名前 | 中身 | 本番の置き場 |
+|---|---|---|
+| `BETTER_AUTH_SECRET` | Cookie の署名に使う。十分に長い乱数 | Secret |
+| `GOOGLE_CLIENT_ID` | Google Cloud Console で作る | Secret |
+| `GOOGLE_CLIENT_SECRET` | 同上 | Secret |
+| `RESEND_API_KEY` | 確認メールとパスワード再設定の送信に使う | Secret |
+| `BETTER_AUTH_URL` | サイトの URL | `[vars]` |
+| `MAIL_FROM` | 差出人。独自ドメインを認証するまでは `onboarding@resend.dev` | `[vars]` |
+| `VAPID_PUBLIC_KEY` | 通知の送り主を示す公開鍵 | `[vars]` |
 
-`VAPID_PUBLIC_KEY` は通知の送り主を示す公開鍵で、隠さない。
-本番の値は `wrangler.toml` の `[vars]` に書く。`.dev.vars` に開発用の値を置くと、ローカルではそちらが優先される。
+Secret は `wrangler secret put` か、ダッシュボードで Type を Secret にして入れる。
+ダッシュボードで Text の変数を足すと、デプロイのたびに `[vars]` で置き直されて消える。
 
 ### 外部サービスの登録
 
