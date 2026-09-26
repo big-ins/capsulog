@@ -150,3 +150,41 @@ async function openOrFocus(url: string): Promise<void> {
 	}
 	await worker.clients.openWindow(url);
 }
+
+/* 標準の型定義に入っていない。Chrome と Firefox が送る */
+interface PushSubscriptionChangeEvent extends ExtendableEvent {
+	readonly oldSubscription: PushSubscription | null;
+	readonly newSubscription: PushSubscription | null;
+}
+
+/*
+ * ブラウザが宛先を作り直したら、新しい宛先をサーバへ送る。
+ * 送らないと、サーバには古い宛先だけが残り、この端末に黙って届かなくなる。
+ * 古い宛先は、送信バッチが送って 410 を受けたときに消える
+ */
+worker.addEventListener('pushsubscriptionchange', (event) => {
+	const change = event as PushSubscriptionChangeEvent;
+	change.waitUntil(resubscribe(change));
+});
+
+async function resubscribe(event: PushSubscriptionChangeEvent): Promise<void> {
+	// 新しい宛先を渡さないブラウザもある。前の宛先と同じ鍵で作り直す
+	const key = event.oldSubscription?.options.applicationServerKey;
+	const subscription =
+		event.newSubscription ??
+		(key
+			? await worker.registration.pushManager.subscribe({
+					userVisibleOnly: true,
+					applicationServerKey: key
+				})
+			: null);
+	if (!subscription) return;
+
+	// Cookie が付くので、ログインしている人の宛先として保存される。
+	// ログアウトしていれば 401 になるが、送る相手がいないので構わない
+	await fetch('/push', {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify(subscription.toJSON())
+	});
+}
