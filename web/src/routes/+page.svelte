@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ProductCard from '$lib/calendar/components/ProductCard.svelte';
+	import ReleasingRow from '$lib/calendar/components/ReleasingRow.svelte';
 	import FlipNumber from '$lib/common/components/FlipNumber.svelte';
 	import PageHeading from '$lib/common/components/PageHeading.svelte';
 	import SectionHeading from '$lib/common/components/SectionHeading.svelte';
@@ -38,18 +38,6 @@
 		</div>
 	{/if}
 
-	<!-- 無いときは節ごと出さない。空の見出しが毎回並ぶと、ホームが間延びする -->
-	{#if data.releasing.length > 0}
-		<section class="pt-6">
-			<SectionHeading title="発売期間中のリマインド" note="{data.releasing.length}件" />
-			<ul class="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
-				{#each data.releasing as item (item.id)}
-					<li><ProductCard {item} /></li>
-				{/each}
-			</ul>
-		</section>
-	{/if}
-
 	<div class="flex flex-col gap-1 pt-6">
 		<p class="text-body font-bold text-faint">コレクション</p>
 		<p class="flex items-baseline gap-1 text-accent">
@@ -59,4 +47,12 @@
 			<span class="text-title font-extrabold text-ink">件</span>
 		</p>
 	</div>
+
+	<!-- 無いときは節ごと出さない。空の見出しが毎回並ぶと、ホームが間延びする -->
+	{#if data.releasing.length > 0}
+		<section class="pt-6">
+			<SectionHeading title="発売期間中のリマインド" note="{data.releasing.length}件" />
+			<ReleasingRow items={data.releasing} />
+		</section>
+	{/if}
 </main>
