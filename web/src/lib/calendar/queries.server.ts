@@ -279,6 +279,25 @@ export async function listYearCounts(db: D1Database, thisYearMonth: string): Pro
 	return years;
 }
 
+/**
+ * その月に発売するもので、リマインドを付けている商品。月の中の発売順に返す。
+ * 期間の中にいるかは日で決まるため、ここでは月までで絞り、残りは呼ぶ側で見る
+ */
+export async function listRemindsOf(
+	db: D1Database,
+	userId: number,
+	yearMonth: string
+): Promise<ProductListItem[]> {
+	const { results } = await db
+		.prepare(
+			`${selectItem(userId)} WHERE s.remind = 1 AND p.release_year_month = ?
+			 ORDER BY ${RELEASE_ORDER}, p.name, p.id`
+		)
+		.bind(userId, yearMonth)
+		.all<ProductListItem>();
+	return results;
+}
+
 /** 件数のまとめ。ヒーローに出す数と、発売時期の一覧へ誘うための数 */
 export async function countProducts(
 	db: D1Database,

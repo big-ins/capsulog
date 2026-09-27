@@ -5,6 +5,7 @@ import {
 	getProduct,
 	listMakers,
 	listProducts,
+	listRemindsOf,
 	listSeriesProducts,
 	listYearCounts
 } from '../queries.server';
@@ -486,5 +487,54 @@ describe('listMakers', () => {
 
 		const makers = await listMakers(db);
 		expect(makers.map((maker) => maker.code)).toEqual(['kitan', 'qualia']);
+	});
+});
+
+describe('listRemindsOf', () => {
+	const USER = 1;
+	const OTHER = 2;
+
+	beforeEach(async () => {
+		for (const id of [USER, OTHER]) {
+			await db
+				.prepare(
+					`INSERT INTO users (id, name, email, emailVerified, createdAt, updatedAt)
+					 VALUES (?, 'テスト', ?, 1, '', '')`
+				)
+				.bind(id, `user${id}@example.com`)
+				.run();
+		}
+	});
+
+	/* 状態の行を入れる。両方外れた行は制約で入らないので、外すときはお気に入りを残す */
+	async function mark(userId: number, productId: number, remind = true) {
+		await db
+			.prepare(
+				`INSERT INTO user_product_states
+					(user_id, product_id, favorited, remind, created_at, updated_at)
+				 VALUES (?, ?, ?, ?, '', '')`
+			)
+			.bind(userId, productId, remind ? 0 : 1, remind ? 1 : 0)
+			.run();
+	}
+
+	it('その月の、自分がリマインドを付けたものだけを返す', async () => {
+		await mark(USER, await seed({ name: '自分' }));
+		await mark(OTHER, await seed({ name: '他の人' }));
+		await mark(USER, await seed({ name: 'お気に入りだけ' }), false);
+		await mark(USER, await seed({ name: '来月', yearMonth: '2026-10' }));
+
+		const items = await listRemindsOf(db, USER, '2026-09');
+		expect(items.map((item) => item.name)).toEqual(['自分']);
+		expect(items[0]?.remind).toBe(1);
+	});
+
+	it('月の中の発売順に並べる', async () => {
+		await mark(USER, await seed({ name: '下旬', precision: 'period', detail: 'late' }));
+		await mark(USER, await seed({ name: '月まで', precision: 'month' }));
+		await mark(USER, await seed({ name: '上旬', precision: 'period', detail: 'early' }));
+
+		const items = await listRemindsOf(db, USER, '2026-09');
+		expect(items.map((item) => item.name)).toEqual(['月まで', '上旬', '下旬']);
 	});
 });
