@@ -4,22 +4,25 @@
 	import { page } from '$app/state';
 	import Bell from '@lucide/svelte/icons/bell';
 	import Heart from '@lucide/svelte/icons/heart';
+	import { toast } from 'svelte-sonner';
 	import SignUpDialog from '$lib/auth/components/SignUpDialog.svelte';
+	import { canRemind, inReleasePeriod } from '../format';
+	import type { ProductListItem } from '../types';
 
 	let {
 		productId,
 		favorited,
 		remind,
-		remindable
+		release
 	}: {
 		productId: number;
 		favorited: number;
 		remind: number;
-		/* 発売を知らせる余地があるか。発売済みと発売月不明では false になる */
-		remindable: boolean;
+		release: Pick<ProductListItem, 'yearMonth' | 'precision' | 'detail'>;
 	} = $props();
 
 	let loggedIn = $derived(!!page.data.user);
+	let remindable = $derived(canRemind(release.yearMonth, release.precision, release.detail));
 
 	/*
 	 * 画面に出している状態。押した瞬間に切り替え、サーバの往復は待たない。
@@ -68,8 +71,7 @@
 
 	/*
 	 * 発売済みにリマインドは出さない。知らせる先が過ぎている。
-	 * ただし既に付いているものは残す。消すと外す手段がなくなる。
-	 * 発売済みになった分は、リマインドの配信を作るときに日次で落とす
+	 * ただし既に付いているものは残す。消すと外す手段がなくなる
 	 */
 	let shown = $derived(
 		BUTTONS.filter((button) => button.kind !== 'remind' || remindable || on.remind)
@@ -114,6 +116,15 @@
 		play(kind, !on[kind]);
 		on[kind] = !on[kind];
 		pending[kind] = true;
+
+		// 期間に入ってから付けた分には通知を送らない。来ない理由をその場で伝える
+		if (
+			kind === 'remind' &&
+			on.remind &&
+			inReleasePeriod(release.yearMonth, release.precision, release.detail)
+		) {
+			toast('すでに発売期間に入っているため、通知は届きません。\n期間中はホームに表示されます。');
+		}
 
 		clearTimeout(timers[kind]);
 		timers[kind] = setTimeout(() => send(kind), SEND_DELAY_MS);

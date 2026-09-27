@@ -2,6 +2,7 @@
 	import './layout.css';
 	import AppHeader from '$lib/common/components/AppHeader.svelte';
 	import BottomNav from '$lib/common/components/BottomNav.svelte';
+	import { Toaster } from '$lib/common/components/ui/sonner';
 	import { page } from '$app/state';
 	import { clearPageCache } from '$lib/common/offline';
 	import { install } from '$lib/install/install.svelte';
@@ -39,3 +40,4 @@
 	{@render children()}
 </div>
 <BottomNav />
+<Toaster />

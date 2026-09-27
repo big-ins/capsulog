@@ -8,6 +8,7 @@ import {
 	releaseHighlight,
 	releaseStatus,
 	canRemind,
+	inReleasePeriod,
 	showsSoldOut
 } from '../format';
 
@@ -172,11 +173,11 @@ describe('canRemind', () => {
 		expect(canRemind('2027-03', 'period', 'late')).toBe(true);
 	});
 
-	it('発売期間中には出さない', () => {
+	it('発売期間中には出す', () => {
 		freezeToday();
 		// 9-15 は中旬の内側
-		expect(canRemind('2026-09', 'period', 'mid')).toBe(false);
-		expect(canRemind('2026-09', 'week', '09-14')).toBe(false);
+		expect(canRemind('2026-09', 'period', 'mid')).toBe(true);
+		expect(canRemind('2026-09', 'week', '09-14')).toBe(true);
 	});
 
 	it('今月でもまだ期間に入っていなければ出す', () => {
@@ -187,6 +188,39 @@ describe('canRemind', () => {
 	it('月までしか分からない今月の商品には出す', () => {
 		freezeToday();
 		expect(canRemind('2026-09', 'month', null)).toBe(true);
+	});
+});
+
+describe('inReleasePeriod', () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	// 日本時間 2026-09-15 に固定する
+	function freezeToday() {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date('2026-09-15T03:00:00Z'));
+	}
+
+	it('旬と週は、その区切りの中だけ', () => {
+		freezeToday();
+		expect(inReleasePeriod('2026-09', 'period', 'mid')).toBe(true);
+		expect(inReleasePeriod('2026-09', 'period', 'late')).toBe(false);
+		expect(inReleasePeriod('2026-09', 'week', '09-14')).toBe(true);
+		expect(inReleasePeriod('2026-09', 'week', '09-21')).toBe(false);
+	});
+
+	it('月までしか分からないものは、その月の間ずっと中', () => {
+		freezeToday();
+		expect(inReleasePeriod('2026-09', 'month', null)).toBe(true);
+		expect(inReleasePeriod('2026-09', null, null)).toBe(true);
+	});
+
+	it('今月以外と発売月不明は外', () => {
+		freezeToday();
+		expect(inReleasePeriod('2026-10', 'month', null)).toBe(false);
+		expect(inReleasePeriod('2026-08', 'month', null)).toBe(false);
+		expect(inReleasePeriod(null, null, null)).toBe(false);
 	});
 });
 

@@ -3,13 +3,7 @@
 	import { page } from '$app/state';
 	import type { ProductListItem } from '../types';
 	import { capsuleColorAt } from '../capsule';
-	import {
-		canRemind,
-		formatDetail,
-		formatYearMonth,
-		releaseHighlight,
-		showsSoldOut
-	} from '../format';
+	import { formatDetail, formatYearMonth, releaseHighlight, showsSoldOut } from '../format';
 	import CapsuleBullet from './CapsuleBullet.svelte';
 	import MakerTag from './MakerTag.svelte';
 	import StateButtons from './StateButtons.svelte';
@@ -110,7 +104,7 @@
 			productId={item.id}
 			favorited={item.favorited}
 			remind={item.remind}
-			remindable={canRemind(item.yearMonth, item.precision, item.detail)}
+			release={item}
 		/>
 	</div>
 </div>

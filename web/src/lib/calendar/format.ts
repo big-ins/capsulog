@@ -108,13 +108,10 @@ export function showsSoldOut(
 }
 
 /**
- * 発売を知らせる余地があるか。
+ * リマインドを付けられるか。発売期間が終わっていないもの。
  *
- * 発売済み・発売期間中・発売月不明には出さない。
- * 知らせる先が過ぎているか、いつ知らせるかが決まらない。
- *
- * 発売期間中と分かるのは旬・週が取れる商品だけ。月までしか分からないものは
- * 月内のいつ出るか断定できないため、その月のうちは対象に残す
+ * 発売済みは知らせる先が過ぎている。発売月不明はいつ知らせるかが決まらない。
+ * 期間中は付けられるが、通知は届かない。期間の間はホームに並ぶ
  */
 export function canRemind(
 	yearMonth: string | null,
@@ -122,8 +119,22 @@ export function canRemind(
 	detail: string | null
 ): boolean {
 	if (!yearMonth) return false;
-	if (releaseStatus(yearMonth, precision, detail) === '発売済み') return false;
-	return releaseHighlight(yearMonth, precision, detail) !== '発売期間中！';
+	return releaseStatus(yearMonth, precision, detail) !== '発売済み';
+}
+
+/**
+ * いま発売期間の中にいるか。月までしか分からないものは、その月の間ずっと中にいる。
+ *
+ * 通知のバッチと区切りを揃える。ずれると、付けたときの案内と届く通知が食い違う
+ */
+export function inReleasePeriod(
+	yearMonth: string | null,
+	precision: string | null,
+	detail: string | null
+): boolean {
+	if (!yearMonth || yearMonth !== currentYearMonth()) return false;
+	const today = new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDate();
+	return today >= segmentStartDay(precision, detail) && today <= segmentEndDay(precision, detail);
 }
 
 /** 今日から offsetMonths ヶ月後の 'YYYY-MM'。日本時間で数える */

@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import { canRemind, formatRelease, releaseStatus } from '$lib/calendar/format';
+	import { formatRelease, releaseStatus } from '$lib/calendar/format';
 	import CapsuleBullet from '$lib/calendar/components/CapsuleBullet.svelte';
 	import CapsuleRow from '$lib/calendar/components/CapsuleRow.svelte';
 	import { capsuleColorAt } from '$lib/calendar/capsule';
@@ -60,7 +60,7 @@
 					productId={product.id}
 					favorited={product.favorited}
 					remind={product.remind}
-					remindable={canRemind(product.yearMonth, product.precision, product.detail)}
+					release={product}
 				/>
 			</div>
 		</div>
