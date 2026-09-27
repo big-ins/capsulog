@@ -4,6 +4,7 @@ import {
 	shiftYearMonth,
 	formatDetail,
 	formatRelease,
+	formatReleaseInYear,
 	formatYearMonth,
 	releaseHighlight,
 	releaseStatus,
@@ -188,6 +189,17 @@ describe('canRemind', () => {
 	it('月までしか分からない今月の商品には出す', () => {
 		freezeToday();
 		expect(canRemind('2026-09', 'month', null)).toBe(true);
+	});
+});
+
+describe('formatReleaseInYear', () => {
+	it('年を省く', () => {
+		expect(formatReleaseInYear('2026-09', 'month', null)).toBe('9月');
+		expect(formatReleaseInYear('2026-09', 'period', 'mid')).toBe('9月中旬');
+	});
+
+	it('週は日付だけ。月を重ねない', () => {
+		expect(formatReleaseInYear('2026-09', 'week', '09-21')).toBe('9/21週');
 	});
 });
 

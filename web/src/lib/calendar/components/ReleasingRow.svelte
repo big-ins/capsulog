@@ -3,7 +3,7 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { fade } from 'svelte/transition';
 	import type { ProductListItem } from '../types';
-	import ProductCard from './ProductCard.svelte';
+	import ReleasingCard from './ReleasingCard.svelte';
 
 	let { items }: { items: ProductListItem[] } = $props();
 
@@ -68,11 +68,14 @@
 		style:--fade-end={atEnd ? '0px' : FADE}
 	>
 		{#each items as item (item.id)}
-			<!-- 幅はカレンダーの一覧の列と揃える。スマホだけは次のカードを覗かせる -->
+			<!--
+			  幅はカレンダーの一覧の列と揃える。
+			  スマホだけは1枚半が見える幅にし、次のカードを覗かせて横に続くと分かるようにする
+			-->
 			<li
-				class="w-[80%] shrink-0 snap-start sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-2rem)/3)] xl:w-[calc((100%-3rem)/4)] 2xl:w-[calc((100%-4rem)/5)]"
+				class="w-[58%] shrink-0 snap-start sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-2rem)/3)] xl:w-[calc((100%-3rem)/4)] 2xl:w-[calc((100%-4rem)/5)]"
 			>
-				<ProductCard {item} />
+				<ReleasingCard {item} />
 			</li>
 		{/each}
 	</ul>

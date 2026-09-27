@@ -31,6 +31,20 @@ export function formatRelease(
 	return precision === 'week' ? `${base} ${suffix}` : base + suffix;
 }
 
+/**
+ * 年を省いた発売時期。「9月中旬」「9/21週」「9月」。年が分かりきった場所で使う。
+ * 週は日付に月を含むので、月を重ねない
+ */
+export function formatReleaseInYear(
+	yearMonth: string,
+	precision: string | null,
+	detail: string | null
+): string {
+	const suffix = formatDetail(precision, detail);
+	if (precision === 'week' && suffix) return suffix;
+	return `${Number(yearMonth.slice(5, 7))}月${suffix ?? ''}`;
+}
+
 /* 旬・週が今月の何日目までかかるか。発売済みの判定にだけ使う */
 function segmentEndDay(precision: string | null, detail: string | null): number {
 	if (precision === 'period' && detail) return { early: 10, mid: 20, late: 31 }[detail] ?? 31;

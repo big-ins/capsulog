@@ -13,12 +13,15 @@
 		productId,
 		favorited,
 		remind,
-		release
+		release,
+		kinds = ['favorited', 'remind']
 	}: {
 		productId: number;
 		favorited: number;
 		remind: number;
 		release: Pick<ProductListItem, 'yearMonth' | 'precision' | 'detail'>;
+		/** 出すボタン。その場で要る操作だけに絞るときに渡す */
+		kinds?: ('favorited' | 'remind')[];
 	} = $props();
 
 	let loggedIn = $derived(!!page.data.user);
@@ -74,7 +77,10 @@
 	 * ただし既に付いているものは残す。消すと外す手段がなくなる
 	 */
 	let shown = $derived(
-		BUTTONS.filter((button) => button.kind !== 'remind' || remindable || on.remind)
+		BUTTONS.filter(
+			(button) =>
+				kinds.includes(button.kind) && (button.kind !== 'remind' || remindable || on.remind)
+		)
 	);
 
 	/* 弾ける輪。項目ごとに持ち、押されたものだけを鳴らす */
