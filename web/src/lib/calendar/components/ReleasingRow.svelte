@@ -63,12 +63,15 @@
 	<ul
 		bind:this={scroller}
 		onscroll={measure}
-		class="fade-edges -mx-4 flex snap-x snap-mandatory scroll-px-4 scrollbar-none gap-4 overflow-x-auto px-4 pt-3 pb-8 [&::-webkit-scrollbar]:hidden"
+		class="fade-edges -mx-4 flex snap-x snap-mandatory scroll-px-4 scrollbar-none gap-4 overflow-x-auto px-4 pt-3 pb-8 lg:-mx-10 lg:scroll-px-10 lg:px-10 [&::-webkit-scrollbar]:hidden"
 		style:--fade-start={atStart ? '0px' : FADE}
 		style:--fade-end={atEnd ? '0px' : FADE}
 	>
 		{#each items as item (item.id)}
-			<li class="w-[80%] shrink-0 snap-start sm:w-[45%] lg:w-[31%]">
+			<!-- 幅はカレンダーの一覧の列と揃える。スマホだけは次のカードを覗かせる -->
+			<li
+				class="w-[80%] shrink-0 snap-start sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-2rem)/3)] xl:w-[calc((100%-3rem)/4)] 2xl:w-[calc((100%-4rem)/5)]"
+			>
 				<ProductCard {item} />
 			</li>
 		{/each}

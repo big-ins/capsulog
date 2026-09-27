@@ -23,7 +23,10 @@
 	{:else}
 		<MonthHeading yearMonth={group.yearMonth} count={group.count ?? group.items.length} {steps} />
 	{/if}
-	<ul class="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
+	<!-- 列の数は layout.css の .reveal と揃える。ずれると、横に並んだカードが別々の間で出る -->
+	<ul
+		class="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+	>
 		{#each group.items as item, index (item.id)}
 			<!-- 追加されたときに一度だけ動く。何行目かは列数から CSS 側で決める -->
 			<li class="reveal" style="--index: {index}">

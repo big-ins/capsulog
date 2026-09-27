@@ -293,11 +293,12 @@
 	/>
 </svelte:head>
 
-<main class="mx-auto max-w-2xl px-4 pt-6 lg:max-w-5xl lg:pt-24">
+<main class="page-frame pt-6 lg:pt-24">
 	<PageHeading title="カレンダー" />
 	<!-- 探す手段。囲まずに置く。窪んだ検索欄そのものが一覧との区切りになる -->
 	<div class="relative">
-		<div class="flex items-center gap-2.5">
+		<!-- 入力欄は一覧の幅まで伸ばさない。打つ文字は短く、長い欄は間延びする -->
+		<div class="flex max-w-2xl items-center gap-2.5">
 			<form method="GET" action="/calendar" class="flex-1">
 				{#if data.filters.month}<input type="hidden" name="month" value={data.filters.month} />{/if}
 				{#if data.filters.makerCode}<input

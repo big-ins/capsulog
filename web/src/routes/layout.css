@@ -89,6 +89,20 @@ body {
 	font-family: var(--font-rounded);
 }
 
+/*
+ * 一覧の画面とヘッダの枠。画面いっぱいに広げ、広い画面では列の数を増やして受ける。
+ * 上限は極端に広い画面のためだけ。普通の PC の画面では効かない。
+ * 左右の余白を変えるときは、横に流す行の食み出し（ReleasingRow）も揃える
+ */
+@utility page-frame {
+	margin-inline: auto;
+	max-width: 120rem;
+	padding-inline: 1rem;
+	@media (width >= 64rem) {
+		padding-inline: 2.5rem;
+	}
+}
+
 /* 押せるものの共通の動き。ホバーで浮き、押すと沈む。
    長押しの文字選択とメニューは :active が固まる原因になるため切る */
 .pressable {
@@ -336,6 +350,16 @@ body {
 @media (width >= 64rem) {
 	.reveal {
 		--columns: 3;
+	}
+}
+@media (width >= 80rem) {
+	.reveal {
+		--columns: 4;
+	}
+}
+@media (width >= 96rem) {
+	.reveal {
+		--columns: 5;
 	}
 }
 @keyframes reveal-slide {

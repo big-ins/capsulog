@@ -9,8 +9,8 @@
   z は中身より上に置く。カードの中にも z-10 があり、同じ値では後から描かれた側が勝つ。
   狭い画面では出さない。行き先は下部ナビが持っており、ロゴを置いても場所を取るだけになる
 -->
-<header class="fixed inset-x-0 top-0 z-30 hidden px-4 pt-3 lg:block">
-	<div class="mx-auto max-w-2xl lg:max-w-5xl">
+<header class="fixed inset-x-0 top-0 z-30 hidden pt-3 lg:block">
+	<div class="page-frame">
 		<div
 			class="inline-flex items-center gap-6 rounded-full bg-surface px-5 py-2.5 shadow-clay-fixed"
 		>
