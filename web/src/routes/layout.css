@@ -28,6 +28,8 @@
 	--surface-sh: rgba(190, 160, 132, 0.18);
 	--accent-hi: rgba(255, 255, 255, 0.45);
 	--accent-sh: rgba(163, 55, 47, 0.4);
+	--ink-hi: rgba(255, 255, 255, 0.12);
+	--ink-sh: rgba(0, 0, 0, 0.25);
 }
 
 @theme inline {
@@ -63,6 +65,9 @@
 		inset -3px -5px 9px var(--surface-sh);
 	/* 色エリアに置くとき。ハイライトは地色から浮いて滲むため落とす */
 	--shadow-clay-on-color: 3px 4px 10px var(--on-color-sh);
+	/* 墨色の面を固定して浮かせるとき。面色用の明るい縁は、濃い面では白く光って浮く */
+	--shadow-clay-inverse:
+		9px 11px 22px var(--sh), inset 2px 3px 5px var(--ink-hi), inset -3px -5px 9px var(--ink-sh);
 	--shadow-clay-pressed:
 		5px 6px 12px var(--sh), inset 2px 3px 4px var(--accent-hi), inset -2px -4px 6px var(--accent-sh);
 	/* 入力欄。外影を持たず内側だけ沈める。押せるものと見た目を分ける */

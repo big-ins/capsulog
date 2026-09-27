@@ -24,7 +24,7 @@
 		unstyled: true,
 		classes: {
 			toast:
-				'w-full rounded-2xl bg-ink px-4 py-3 text-body leading-relaxed font-bold text-surface shadow-clay-fixed',
+				'w-full rounded-2xl bg-ink px-4 py-3 text-body leading-relaxed font-bold text-surface shadow-clay-inverse',
 			title: 'whitespace-pre-line'
 		}
 	}}
